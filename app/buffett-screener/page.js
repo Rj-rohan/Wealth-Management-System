@@ -3,15 +3,27 @@ import { useState, useMemo } from "react";
 import StockCard from "./components/StockCard";
 import { stocks, sectors } from "./data/stocks";
 import { calcBuffettScore } from "./data/scoring";
+import AppShell from "../components/AppShell";
 
 const criteria = [
-  { icon: "📈", label: "High ROE", desc: "Return on Equity > 15% sustained over years" },
-  { icon: "💪", label: "Low Debt", desc: "Debt/Equity < 0.5, company funds growth internally" },
-  { icon: "🔄", label: "Earnings Growth", desc: "Consistent 10%+ EPS CAGR over 5 years" },
-  { icon: "🏰", label: "Economic Moat", desc: "Brand, switching costs, network effect, or cost advantage" },
-  { icon: "💰", label: "Fair Valuation", desc: "PEG ratio ≤ 1.5 (P/E relative to earnings growth)" },
-  { icon: "🤝", label: "Promoter Skin-in-Game", desc: "High promoter holding shows management conviction" },
+  { label: "High ROE", desc: "Return on Equity > 15% sustained" },
+  { label: "Low Debt", desc: "D/E < 0.5, self-funded growth" },
+  { label: "Earnings Growth", desc: "10%+ EPS CAGR over 5 years" },
+  { label: "Economic Moat", desc: "Brand, switching costs, network" },
+  { label: "Fair Valuation", desc: "PEG ratio ≤ 1.5" },
+  { label: "Promoter Stake", desc: "High holding = skin in game" },
 ];
+
+const selectStyle = {
+  background: "#1C2128",
+  border: "1px solid rgba(255,255,255,0.1)",
+  color: "#ffffff",
+  borderRadius: "8px",
+  padding: "8px 12px",
+  fontSize: "13px",
+  outline: "none",
+  cursor: "pointer",
+};
 
 export default function BuffettScreener() {
   const [sector, setSector] = useState("All");
@@ -32,52 +44,47 @@ export default function BuffettScreener() {
   }, [sector, sortBy, minScore]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 mb-1">
-            <span className="text-3xl">🧠</span>
-            <h1 className="text-2xl font-bold text-gray-900">Warren Buffett Stock Screener</h1>
-          </div>
-          <p className="text-gray-500 text-sm ml-11">
-            Stocks scored using Buffett&apos;s Secret Sauce — ROE, Moat, Debt, Growth & Valuation
-          </p>
-        </div>
-      </div>
+    <AppShell pageTitle="Warren Buffett Screener" pageSubtitle="Stocks scored by ROE, moat, debt, growth & valuation">
+      <div className="px-6 py-6 max-w-6xl mx-auto">
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Methodology Criteria */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-8">
-          <h2 className="font-bold text-amber-900 mb-3 text-sm uppercase tracking-wide">
-            📜 Buffett&apos;s Investment Criteria
-          </h2>
+        {/* Methodology Panel */}
+        <div
+          className="rounded-xl p-5 mb-6"
+          style={{ background: "rgba(212,175,55,0.05)", border: "1px solid rgba(212,175,55,0.12)" }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#D4AF37" }}>
+            Buffett&apos;s Investment Criteria
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {criteria.map((c) => (
-              <div key={c.label} className="flex items-start gap-2">
-                <span className="text-lg">{c.icon}</span>
+              <div key={c.label} className="flex items-start gap-2.5">
+                <div
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                  style={{ background: "#D4AF37" }}
+                />
                 <div>
-                  <p className="text-xs font-semibold text-amber-800">{c.label}</p>
-                  <p className="text-xs text-amber-700">{c.desc}</p>
+                  <p className="text-xs font-semibold text-white">{c.label}</p>
+                  <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>{c.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          {/* Sector Filter */}
+        {/* Controls */}
+        <div className="flex flex-wrap gap-3 mb-5">
+          {/* Sector Pills */}
           <div className="flex flex-wrap gap-2">
             {sectors.map((s) => (
               <button
                 key={s}
                 onClick={() => setSector(s)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                  sector === s
-                    ? "bg-blue-600 text-white"
-                    : "bg-white border border-gray-200 text-gray-600 hover:border-blue-400"
-                }`}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: sector === s ? "#22C55E" : "rgba(255,255,255,0.04)",
+                  color: sector === s ? "#000" : "#A1A1AA",
+                  border: `1px solid ${sector === s ? "transparent" : "rgba(255,255,255,0.07)"}`,
+                }}
               >
                 {s}
               </button>
@@ -85,68 +92,74 @@ export default function BuffettScreener() {
           </div>
 
           {/* Sort + Min Score */}
-          <div className="flex gap-3 ml-auto">
+          <div className="flex gap-2 ml-auto">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700"
+              style={selectStyle}
             >
-              <option value="score">Sort: Buffett Score</option>
-              <option value="roe">Sort: ROE</option>
-              <option value="pe">Sort: Lowest P/E</option>
-              <option value="growth">Sort: Earnings Growth</option>
+              <option value="score" style={{ background: "#1C2128" }}>Sort: Buffett Score</option>
+              <option value="roe" style={{ background: "#1C2128" }}>Sort: ROE</option>
+              <option value="pe" style={{ background: "#1C2128" }}>Sort: Lowest P/E</option>
+              <option value="growth" style={{ background: "#1C2128" }}>Sort: Earnings Growth</option>
             </select>
             <select
               value={minScore}
               onChange={(e) => setMinScore(Number(e.target.value))}
-              className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700"
+              style={selectStyle}
             >
-              <option value={0}>Min Score: All</option>
-              <option value={50}>Min Score: 50+</option>
-              <option value={65}>Min Score: 65+ (Buy)</option>
-              <option value={80}>Min Score: 80+ (Strong Buy)</option>
+              <option value={0} style={{ background: "#1C2128" }}>Min Score: All</option>
+              <option value={50} style={{ background: "#1C2128" }}>Min: 50+</option>
+              <option value={65} style={{ background: "#1C2128" }}>Min: 65+ (Buy)</option>
+              <option value={80} style={{ background: "#1C2128" }}>Min: 80+ (Strong Buy)</option>
             </select>
           </div>
         </div>
 
-        {/* Results Count */}
-        <p className="text-sm text-gray-500 mb-4">
-          Showing <span className="font-semibold text-gray-800">{filtered.length}</span> stocks
-        </p>
+        {/* Results Header */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm" style={{ color: "#A1A1AA" }}>
+            <span className="text-white font-semibold">{filtered.length}</span> stocks
+          </p>
+          {/* Score Legend */}
+          <div className="flex items-center gap-4">
+            {[
+              { range: "80–100", label: "Strong Buy", color: "#22C55E" },
+              { range: "65–79", label: "Buy", color: "#3B82F6" },
+              { range: "50–64", label: "Hold", color: "#F59E0B" },
+              { range: "0–49", label: "Avoid", color: "#DC2626" },
+            ].map((l) => (
+              <div key={l.label} className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+                <span className="text-xs" style={{ color: "#A1A1AA" }}>{l.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Stock Grid */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-lg font-medium">No stocks match your filters</p>
-            <p className="text-sm">Try adjusting the sector or minimum score</p>
+          <div
+            className="rounded-xl p-16 text-center"
+            style={{ background: "#161B22", border: "1px dashed rgba(255,255,255,0.08)" }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4"
+              style={{ background: "rgba(255,255,255,0.04)" }}
+            >
+              🔍
+            </div>
+            <p className="text-lg font-semibold text-white mb-1">No stocks match your filters</p>
+            <p className="text-sm" style={{ color: "#A1A1AA" }}>Try adjusting the sector or minimum score</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((stock) => (
               <StockCard key={stock.id} stock={stock} />
             ))}
           </div>
         )}
-
-        {/* Legend */}
-        <div className="mt-10 border-t border-gray-200 pt-6">
-          <p className="text-xs font-semibold text-gray-500 mb-3">SCORE LEGEND</p>
-          <div className="flex flex-wrap gap-4">
-            {[
-              { range: "80–100", label: "Strong Buy", color: "bg-green-500" },
-              { range: "65–79", label: "Buy", color: "bg-blue-500" },
-              { range: "50–64", label: "Hold", color: "bg-yellow-400" },
-              { range: "0–49", label: "Avoid", color: "bg-red-400" },
-            ].map((l) => (
-              <div key={l.label} className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${l.color}`} />
-                <span className="text-xs text-gray-600">{l.range} — {l.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

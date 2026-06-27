@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "../context/UserContext";
+import AppShell from "../components/AppShell";
 
 const letters = [
   {
@@ -147,24 +148,24 @@ const letters = [
 ];
 
 const tagColors = {
-  compounding: "bg-green-100 text-green-700",
-  mindset: "bg-purple-100 text-purple-700",
-  valuation: "bg-blue-100 text-blue-700",
-  risk: "bg-red-100 text-red-700",
-  moat: "bg-amber-100 text-amber-700",
-  "business quality": "bg-orange-100 text-orange-700",
-  management: "bg-indigo-100 text-indigo-700",
-  trust: "bg-teal-100 text-teal-700",
-  safety: "bg-cyan-100 text-cyan-700",
-  crisis: "bg-red-100 text-red-700",
-  opportunity: "bg-green-100 text-green-700",
-  knowledge: "bg-blue-100 text-blue-700",
-  discipline: "bg-gray-100 text-gray-700",
-  dividends: "bg-yellow-100 text-yellow-700",
-  reinvestment: "bg-lime-100 text-lime-700",
-  indexing: "bg-pink-100 text-pink-700",
-  passive: "bg-purple-100 text-purple-700",
-  time: "bg-teal-100 text-teal-700",
+  compounding: { color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
+  mindset: { color: "#A855F7", bg: "rgba(168,85,247,0.1)" },
+  valuation: { color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
+  risk: { color: "#DC2626", bg: "rgba(220,38,38,0.1)" },
+  moat: { color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
+  "business quality": { color: "#F97316", bg: "rgba(249,115,22,0.1)" },
+  management: { color: "#6366F1", bg: "rgba(99,102,241,0.1)" },
+  trust: { color: "#14B8A6", bg: "rgba(20,184,166,0.1)" },
+  safety: { color: "#06B6D4", bg: "rgba(6,182,212,0.1)" },
+  crisis: { color: "#DC2626", bg: "rgba(220,38,38,0.1)" },
+  opportunity: { color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
+  knowledge: { color: "#3B82F6", bg: "rgba(59,130,246,0.1)" },
+  discipline: { color: "#A1A1AA", bg: "rgba(161,161,170,0.1)" },
+  dividends: { color: "#D4AF37", bg: "rgba(212,175,55,0.1)" },
+  reinvestment: { color: "#84CC16", bg: "rgba(132,204,22,0.1)" },
+  indexing: { color: "#EC4899", bg: "rgba(236,72,153,0.1)" },
+  passive: { color: "#A855F7", bg: "rgba(168,85,247,0.1)" },
+  time: { color: "#14B8A6", bg: "rgba(20,184,166,0.1)" },
 };
 
 const allTags = [...new Set(letters.flatMap((l) => l.tags))];
@@ -182,95 +183,170 @@ export default function ShareholderLetters() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">📬 Buffett Shareholder Letters</h1>
-            <p className="text-sm text-gray-500">Key wisdom from 1998–2017 letters, with Indian market context</p>
-          </div>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Dashboard</Link>
-        </div>
-      </div>
+    <AppShell pageTitle="Shareholder Letters" pageSubtitle="Buffett's 1998–2017 letters with Indian market context">
+      <div className="px-6 py-6 max-w-4xl mx-auto">
 
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-4">
-          <button onClick={() => setFilter("all")} className={`px-4 py-2 rounded-full text-sm font-medium ${filter === "all" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-600"}`}>
+        {/* Profile + Tag Filters */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => setFilter("all")}
+            className="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: filter === "all" ? "#22C55E" : "rgba(255,255,255,0.04)",
+              color: filter === "all" ? "#000" : "#A1A1AA",
+              border: `1px solid ${filter === "all" ? "transparent" : "rgba(255,255,255,0.07)"}`,
+            }}
+          >
             All Letters ({letters.length})
           </button>
           {profile && (
-            <button onClick={() => setFilter("me")} className={`px-4 py-2 rounded-full text-sm font-medium ${filter === "me" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-600"}`}>
+            <button
+              onClick={() => setFilter("me")}
+              className="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: filter === "me" ? "#22C55E" : "rgba(255,255,255,0.04)",
+                color: filter === "me" ? "#000" : "#A1A1AA",
+                border: `1px solid ${filter === "me" ? "transparent" : "rgba(255,255,255,0.07)"}`,
+              }}
+            >
               {profile.investor.icon} For {profile.name || profile.investor.type}
             </button>
           )}
         </div>
 
+        {/* Topic Tags */}
         <div className="flex flex-wrap gap-2 mb-6">
-          <button onClick={() => setTagFilter(null)} className={`px-3 py-1 rounded-full text-xs font-medium ${!tagFilter ? "bg-gray-800 text-white" : "bg-white border border-gray-200 text-gray-500"}`}>All Topics</button>
-          {allTags.map((t) => (
-            <button key={t} onClick={() => setTagFilter(tagFilter === t ? null : t)} className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${tagFilter === t ? "bg-gray-800 text-white" : `${tagColors[t] || "bg-gray-100 text-gray-600"} border border-transparent`}`}>
-              {t}
-            </button>
-          ))}
+          <button
+            onClick={() => setTagFilter(null)}
+            className="px-3 py-1 rounded-full text-xs font-medium transition-all"
+            style={{
+              background: !tagFilter ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)",
+              color: !tagFilter ? "#fff" : "#A1A1AA",
+            }}
+          >
+            All Topics
+          </button>
+          {allTags.map((t) => {
+            const tc = tagColors[t] || { color: "#A1A1AA", bg: "rgba(161,161,170,0.1)" };
+            const isActive = tagFilter === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTagFilter(tagFilter === t ? null : t)}
+                className="px-3 py-1 rounded-full text-xs font-medium capitalize transition-all"
+                style={{
+                  background: isActive ? tc.bg : "rgba(255,255,255,0.04)",
+                  color: isActive ? tc.color : "#A1A1AA",
+                  border: `1px solid ${isActive ? tc.color + "30" : "rgba(255,255,255,0.07)"}`,
+                }}
+              >
+                {t}
+              </button>
+            );
+          })}
         </div>
 
-        <p className="text-sm text-gray-500 mb-5">Showing {displayed.length} letters</p>
+        <p className="text-xs mb-5" style={{ color: "#A1A1AA" }}>
+          Showing <span className="text-white font-medium">{displayed.length}</span> letters
+        </p>
 
-        <div className="space-y-4">
-          {displayed.map((l) => (
-            <div key={l.year} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition-shadow">
-              <button className="w-full text-left p-5" onClick={() => setExpanded(expanded === l.year ? null : l.year)}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{l.icon}</span>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-gray-900">{l.year} Letter</span>
-                        <span className="text-gray-500">·</span>
-                        <span className="font-semibold text-gray-700">{l.theme}</span>
-                        {profile && l.relevantFor.includes(profile.investor.type) && (
-                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">✓ For You</span>
-                        )}
-                      </div>
-                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                        {l.tags.map((t) => (
-                          <span key={t} className={`text-xs px-2 py-0.5 rounded-full capitalize ${tagColors[t] || "bg-gray-100 text-gray-600"}`}>{t}</span>
-                        ))}
+        <div className="space-y-3">
+          {displayed.map((l) => {
+            const isExpanded = expanded === l.year;
+            return (
+              <div
+                key={l.year}
+                className="rounded-xl overflow-hidden transition-all duration-200"
+                style={{
+                  background: "#161B22",
+                  border: `1px solid ${isExpanded ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
+                }}
+              >
+                <button
+                  className="w-full text-left p-5"
+                  onClick={() => setExpanded(isExpanded ? null : l.year)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <span className="text-xl flex-shrink-0 mt-0.5">{l.icon}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                          <span className="font-semibold text-white text-sm">{l.year} Letter</span>
+                          <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
+                          <span className="text-sm font-medium" style={{ color: "#A1A1AA" }}>{l.theme}</span>
+                          {profile && l.relevantFor.includes(profile.investor.type) && (
+                            <span
+                              className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                              style={{ background: "rgba(34,197,94,0.1)", color: "#22C55E" }}
+                            >
+                              ✓ For You
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {l.tags.map((t) => {
+                            const tc = tagColors[t] || { color: "#A1A1AA", bg: "rgba(161,161,170,0.1)" };
+                            return (
+                              <span
+                                key={t}
+                                className="text-xs px-2 py-0.5 rounded-full capitalize"
+                                style={{ background: tc.bg, color: tc.color }}
+                              >
+                                {t}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
+                    <span className="text-sm flex-shrink-0" style={{ color: "#A1A1AA" }}>
+                      {isExpanded ? "▲" : "▼"}
+                    </span>
                   </div>
-                  <span className="text-gray-400 text-sm">{expanded === l.year ? "▲" : "▼"}</span>
-                </div>
 
-                <blockquote className="mt-3 border-l-4 border-amber-400 pl-4 text-sm text-gray-700 italic">
-                  &quot;{l.keyQuote}&quot;
-                </blockquote>
-              </button>
+                  <div
+                    className="mt-3 pl-4 py-2"
+                    style={{ borderLeft: "2px solid rgba(212,175,55,0.4)" }}
+                  >
+                    <p className="text-sm italic leading-relaxed" style={{ color: "#A1A1AA" }}>
+                      &quot;{l.keyQuote}&quot;
+                    </p>
+                  </div>
+                </button>
 
-              {expanded === l.year && (
-                <div className="border-t border-gray-100 bg-gray-50 p-5 space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">📌 Key Lessons</p>
-                    <ul className="space-y-1.5">
-                      {l.lessons.map((lesson) => (
-                        <li key={lesson} className="flex items-start gap-2 text-sm text-gray-700">
-                          <span className="text-blue-500 mt-0.5">→</span>
-                          {lesson}
-                        </li>
-                      ))}
-                    </ul>
+                {isExpanded && (
+                  <div
+                    className="p-5 space-y-4"
+                    style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#A1A1AA" }}>
+                        Key Lessons
+                      </p>
+                      <ul className="space-y-2">
+                        {l.lessons.map((lesson) => (
+                          <li key={lesson} className="flex items-start gap-2.5 text-sm text-white">
+                            <span className="flex-shrink-0 mt-0.5" style={{ color: "#22C55E" }}>→</span>
+                            {lesson}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div
+                      className="rounded-xl p-4"
+                      style={{ background: "rgba(212,175,55,0.07)", border: "1px solid rgba(212,175,55,0.15)" }}
+                    >
+                      <p className="text-xs font-semibold mb-2" style={{ color: "#D4AF37" }}>🇮🇳 Indian Market Context</p>
+                      <p className="text-sm leading-relaxed text-white">{l.indianContext}</p>
+                    </div>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-xs font-semibold text-amber-700 uppercase mb-1">🇮🇳 Indian Market Context</p>
-                    <p className="text-sm text-amber-800">{l.indianContext}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

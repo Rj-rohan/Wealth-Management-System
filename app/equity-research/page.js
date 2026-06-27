@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "../context/UserContext";
+import AppShell from "../components/AppShell";
 
 const researchData = [
   {
@@ -96,12 +97,12 @@ const researchData = [
   },
 ];
 
-const riskColors = {
-  "Low": "bg-green-100 text-green-700",
-  "Low-Medium": "bg-lime-100 text-lime-700",
-  "Medium": "bg-yellow-100 text-yellow-700",
-  "Medium-High": "bg-orange-100 text-orange-700",
-  "High": "bg-red-100 text-red-700",
+const riskConfig = {
+  "Low": { color: "#22C55E", bg: "rgba(34,197,94,0.1)" },
+  "Low-Medium": { color: "#84CC16", bg: "rgba(132,204,22,0.1)" },
+  "Medium": { color: "#F59E0B", bg: "rgba(245,158,11,0.1)" },
+  "Medium-High": { color: "#F97316", bg: "rgba(249,115,22,0.1)" },
+  "High": { color: "#DC2626", bg: "rgba(220,38,38,0.1)" },
 };
 
 export default function EquityResearch() {
@@ -114,104 +115,182 @@ export default function EquityResearch() {
     : researchData;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">📰 Equity Research</h1>
-            <p className="text-sm text-gray-500">Sector-wise analysis based on Buffett methodology & Motilal Oswal wealth creation studies</p>
-          </div>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Dashboard</Link>
+    <AppShell pageTitle="Equity Research" pageSubtitle="Sector analysis powered by Buffett + Motilal Oswal methodology">
+      <div className="px-6 py-6 max-w-5xl mx-auto">
+
+        {/* Filters */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          <button
+            onClick={() => setFilter("all")}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: filter === "all" ? "#22C55E" : "rgba(255,255,255,0.04)",
+              color: filter === "all" ? "#000" : "#A1A1AA",
+              border: `1px solid ${filter === "all" ? "transparent" : "rgba(255,255,255,0.07)"}`,
+            }}
+          >
+            All Sectors
+          </button>
+          {profile && (
+            <button
+              onClick={() => setFilter("recommended")}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={{
+                background: filter === "recommended" ? "#22C55E" : "rgba(255,255,255,0.04)",
+                color: filter === "recommended" ? "#000" : "#A1A1AA",
+                border: `1px solid ${filter === "recommended" ? "transparent" : "rgba(255,255,255,0.07)"}`,
+              }}
+            >
+              {profile.investor.icon} For {profile.investor.type}
+            </button>
+          )}
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        {/* Filter */}
-        {profile && (
-          <div className="flex gap-3 mb-6">
-            <button onClick={() => setFilter("all")} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "all" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-600"}`}>
-              All Sectors
-            </button>
-            <button onClick={() => setFilter("recommended")} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${filter === "recommended" ? "bg-blue-600 text-white" : "bg-white border border-gray-200 text-gray-600"}`}>
-              {profile.investor.icon} For {profile.investor.type} Investors
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {displayed.map((r) => (
-            <div key={r.sector} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{r.icon}</span>
-                    <div>
-                      <h3 className="font-bold text-gray-900">{r.sector}</h3>
-                      <p className="text-xs text-gray-400">{r.moatType}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {displayed.map((r) => {
+            const rc = riskConfig[r.riskLevel] || riskConfig["Medium"];
+            const isExpanded = selected?.sector === r.sector;
+            return (
+              <div
+                key={r.sector}
+                className="rounded-xl overflow-hidden transition-all duration-200"
+                style={{
+                  background: "#161B22",
+                  border: `1px solid ${isExpanded ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
+                }}
+              >
+                <div className="p-5">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                        style={{ background: "rgba(255,255,255,0.04)" }}
+                      >
+                        {r.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white text-sm">{r.sector}</h3>
+                        <p className="text-xs mt-0.5" style={{ color: "#A1A1AA" }}>{r.moatType}</p>
+                      </div>
                     </div>
+                    <span
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full flex-shrink-0"
+                      style={{ background: rc.bg, color: rc.color }}
+                    >
+                      {r.riskLevel} Risk
+                    </span>
                   </div>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${riskColors[r.riskLevel]}`}>{r.riskLevel} Risk</span>
-                </div>
 
-                <div className="grid grid-cols-4 gap-2 mb-3 text-center">
-                  {[
-                    { label: "Avg ROE", val: `${r.keyMetrics.avgROE}%` },
-                    { label: "Avg P/E", val: `${r.keyMetrics.avgPE}x` },
-                    { label: "Debt", val: r.keyMetrics.debtLevel },
-                    { label: "Div Yield", val: `${r.keyMetrics.dividendYield}%` },
-                  ].map((m) => (
-                    <div key={m.label} className="bg-gray-50 rounded-lg p-2">
-                      <p className="text-xs text-gray-400">{m.label}</p>
-                      <p className="text-xs font-bold text-gray-800">{m.val}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="text-xs text-gray-600 line-clamp-2 mb-3">{r.buffettTake}</p>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-wrap gap-1">
-                    {r.keyStocks.slice(0, 3).map((s) => (
-                      <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{s}</span>
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-4 gap-2 mb-4">
+                    {[
+                      { label: "Avg ROE", val: `${r.keyMetrics.avgROE}%` },
+                      { label: "Avg P/E", val: `${r.keyMetrics.avgPE}x` },
+                      { label: "Debt", val: r.keyMetrics.debtLevel },
+                      { label: "Div Yield", val: `${r.keyMetrics.dividendYield}%` },
+                    ].map((m) => (
+                      <div
+                        key={m.label}
+                        className="rounded-lg p-2 text-center"
+                        style={{ background: "rgba(255,255,255,0.03)" }}
+                      >
+                        <p className="text-xs mb-1" style={{ color: "#A1A1AA" }}>{m.label}</p>
+                        <p className="text-xs font-bold text-white">{m.val}</p>
+                      </div>
                     ))}
                   </div>
-                  <button onClick={() => setSelected(selected?.sector === r.sector ? null : r)} className="text-xs text-blue-600 font-medium hover:text-blue-800 ml-2 shrink-0">
-                    {selected?.sector === r.sector ? "▲ Less" : "▼ More"}
-                  </button>
-                </div>
-              </div>
 
-              {/* Expanded Detail */}
-              {selected?.sector === r.sector && (
-                <div className="border-t border-gray-100 p-5 bg-gray-50 space-y-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">💬 Buffett&apos;s Full Take</p>
-                    <p className="text-sm text-gray-700">{r.buffettTake}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs font-semibold text-green-700 uppercase mb-1">📈 Catalysts</p>
-                      <ul className="space-y-1">{r.catalysts.map((c) => <li key={c} className="text-xs text-gray-600">• {c}</li>)}</ul>
+                  <p className="text-xs leading-relaxed mb-4" style={{ color: "#A1A1AA" }}>
+                    {r.buffettTake.substring(0, 100)}...
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1.5">
+                      {r.keyStocks.slice(0, 3).map((s) => (
+                        <span
+                          key={s}
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: "rgba(255,255,255,0.06)", color: "#A1A1AA" }}
+                        >
+                          {s}
+                        </span>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-red-600 uppercase mb-1">⚠️ Risks</p>
-                      <ul className="space-y-1">{r.risks.map((ri) => <li key={ri} className="text-xs text-gray-600">• {ri}</li>)}</ul>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-purple-700 uppercase mb-1">📊 Motilal Oswal Study Insight</p>
-                    <p className="text-xs text-gray-600">{r.motilalInsight}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-blue-700 uppercase mb-1">🔍 Watch Metrics</p>
-                    <div className="flex flex-wrap gap-2">{r.watchMetrics.map((m) => <span key={m} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">{m}</span>)}</div>
+                    <button
+                      onClick={() => setSelected(isExpanded ? null : r)}
+                      className="text-xs font-medium ml-2 flex-shrink-0 transition-colors px-2 py-1 rounded-lg"
+                      style={{ color: isExpanded ? "#22C55E" : "#A1A1AA" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#22C55E"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = isExpanded ? "#22C55E" : "#A1A1AA"; }}
+                    >
+                      {isExpanded ? "▲ Less" : "▼ More"}
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* Expanded Detail */}
+                {isExpanded && (
+                  <div
+                    className="p-5 space-y-4"
+                    style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#A1A1AA" }}>Buffett&apos;s Take</p>
+                      <p className="text-sm leading-relaxed text-white">{r.buffettTake}</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#22C55E" }}>Catalysts</p>
+                        <ul className="space-y-1.5">
+                          {r.catalysts.map((c) => (
+                            <li key={c} className="flex items-start gap-2 text-xs" style={{ color: "#A1A1AA" }}>
+                              <span style={{ color: "#22C55E", marginTop: "1px" }}>+</span> {c}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#DC2626" }}>Risks</p>
+                        <ul className="space-y-1.5">
+                          {r.risks.map((ri) => (
+                            <li key={ri} className="flex items-start gap-2 text-xs" style={{ color: "#A1A1AA" }}>
+                              <span style={{ color: "#DC2626", marginTop: "1px" }}>–</span> {ri}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div
+                      className="rounded-lg p-3"
+                      style={{ background: "rgba(212,175,55,0.06)", border: "1px solid rgba(212,175,55,0.12)" }}
+                    >
+                      <p className="text-xs font-semibold mb-1" style={{ color: "#D4AF37" }}>Motilal Oswal Study</p>
+                      <p className="text-xs" style={{ color: "#A1A1AA" }}>{r.motilalInsight}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#3B82F6" }}>Watch Metrics</p>
+                      <div className="flex flex-wrap gap-2">
+                        {r.watchMetrics.map((m) => (
+                          <span
+                            key={m}
+                            className="text-xs px-2.5 py-1 rounded-full"
+                            style={{ background: "rgba(59,130,246,0.1)", color: "#3B82F6" }}
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }
