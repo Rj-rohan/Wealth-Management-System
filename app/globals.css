@@ -1,26 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0D1117;
-  --foreground: #ffffff;
-  --surface: #161B22;
-  --surface-raised: #1C2128;
-  --surface-hover: #21262D;
+  /* Surfaces */
+  --background: #0A0E1A;
+  --surface: #111726;
+  --surface-raised: #161D2E;
+  --surface-hover: #1C2538;
+
+  /* Borders */
   --border: rgba(255, 255, 255, 0.07);
-  --border-hover: rgba(255, 255, 255, 0.15);
-  --accent: #22C55E;
-  --accent-dim: rgba(34, 197, 94, 0.12);
-  --gold: #D4AF37;
-  --gold-dim: rgba(212, 175, 55, 0.12);
-  --muted: #A1A1AA;
-  --danger: #DC2626;
-  --danger-dim: rgba(220, 38, 38, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --foreground: #F2F4F8;
+  --muted: #8A94A6;
+  --muted-strong: #AEB6C4;
+
+  /* Brand */
+  --primary: #6366F1;
+  --primary-strong: #4F46E5;
+  --primary-dim: rgba(99, 102, 241, 0.14);
+  --accent: #10B981;
+  --accent-dim: rgba(16, 185, 129, 0.14);
+
+  /* Status */
+  --success: #10B981;
   --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-dim: rgba(239, 68, 68, 0.14);
+  --info: #38BDF8;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -44,8 +65,8 @@ body {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -55,12 +76,11 @@ body {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Selection */
 ::selection {
-  background: rgba(34, 197, 94, 0.25);
+  background: rgba(99, 102, 241, 0.3);
   color: #fff;
 }
 
@@ -72,4 +92,22 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+/* Autofill styling for the dark theme */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0px 1000px var(--surface-raised) inset;
+  caret-color: var(--foreground);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+@keyframes wa-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes wa-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
