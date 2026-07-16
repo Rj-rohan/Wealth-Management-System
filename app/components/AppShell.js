@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "../context/UserContext";
@@ -173,30 +173,40 @@ function IconShield() {
   );
 }
 
-const navItems = [
-  // --- Retail Investor ---
-  { href: "/", label: "Retail Dashboard", Icon: IconDashboard },
-  { href: "/portfolio", label: "Retail Portfolio", Icon: IconPortfolio },
-  { href: "/buffett-screener", label: "Screener", Icon: IconScreener },
-  { href: "/equity-research", label: "Research", Icon: IconResearch },
-  { href: "/shareholder-letters", label: "Letters", Icon: IconLetters },
-  
-  // --- Admin Console ---
-  { href: "/corporate", label: "Corp Dashboard", Icon: IconDashboard },
-  { href: "/corporate/company", label: "Company Profile", Icon: IconCompany },
-  { href: "/corporate/assets", label: "Assets", Icon: IconAssets },
-  { href: "/corporate/portfolio", label: "Corp Allocation", Icon: IconPortfolio },
-  { href: "/corporate/treasury", label: "Treasury Accounts", Icon: IconBank },
-  { href: "/corporate/cashflow", label: "Cash Flow Ledger", Icon: IconBook },
-  { href: "/corporate/compliance", label: "Audit & Compliance", Icon: IconShield },
-  
-  // --- Advanced AI Insights ---
-  { href: "/ai-cfo", label: "AI CFO Advisor", Icon: IconAICFO },
-  { href: "/market-pulse", label: "Market Pulse", Icon: IconMarketPulse },
-  { href: "/treasury-autopilot", label: "Treasury Forecasting", Icon: IconTreasury },
-  { href: "/risk-radar", label: "Risk Stress-Testing", Icon: IconRiskRadar },
-  { href: "/branch-intelligence", label: "Branch mapping", Icon: IconBranches },
-  { href: "/smart-reports", label: "Smart Reports PDF", Icon: IconReports },
+const navSections = [
+  {
+    title: "Retail Investor",
+    items: [
+      { href: "/", label: "Retail Dashboard", Icon: IconDashboard },
+      { href: "/portfolio", label: "Retail Portfolio", Icon: IconPortfolio },
+      { href: "/buffett-screener", label: "Screener", Icon: IconScreener },
+      { href: "/equity-research", label: "Research", Icon: IconResearch },
+      { href: "/shareholder-letters", label: "Letters", Icon: IconLetters }
+    ]
+  },
+  {
+    title: "Corporate Module",
+    items: [
+      { href: "/corporate", label: "Corp Dashboard", Icon: IconDashboard },
+      { href: "/corporate/company", label: "Company Profile", Icon: IconCompany },
+      { href: "/corporate/assets", label: "Assets", Icon: IconAssets },
+      { href: "/corporate/portfolio", label: "Corp Allocation", Icon: IconPortfolio },
+      { href: "/corporate/treasury", label: "Treasury Accounts", Icon: IconBank },
+      { href: "/corporate/cashflow", label: "Cash Flow Ledger", Icon: IconBook },
+      { href: "/corporate/compliance", label: "Audit & Compliance", Icon: IconShield }
+    ]
+  },
+  {
+    title: "Advanced AI & Analytics",
+    items: [
+      { href: "/ai-cfo", label: "AI CFO Advisor", Icon: IconAICFO },
+      { href: "/market-pulse", label: "Market Pulse", Icon: IconMarketPulse },
+      { href: "/treasury-autopilot", label: "Treasury Forecasting", Icon: IconTreasury },
+      { href: "/risk-radar", label: "Risk Stress-Testing", Icon: IconRiskRadar },
+      { href: "/branch-intelligence", label: "Branch mapping", Icon: IconBranches },
+      { href: "/corporate-reports", label: "Corporate Reports", Icon: IconReports }
+    ]
+  }
 ];
 
 const investorTypeAccent = {
@@ -206,28 +216,56 @@ const investorTypeAccent = {
   Balanced: "#F59E0B",
 };
 
-export default function AppShell({ children, pageTitle, pageSubtitle }) {
-  const [collapsed, setCollapsed] = useState(false);
+export default function AppShell({ children, pageTitle, pageSubtitle, maxWidth = "max-w-7xl" }) {
+  const [collapsed, setCollapsed] = useState(true); // default collapsed
   const pathname = usePathname();
   const { profile, clearProfile } = useUser();
+  const hoverTimeoutRef = useRef(null);
 
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setCollapsed(false);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setCollapsed(true);
+    }, 300); // 300ms delay
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  const sidebarWidth = collapsed ? "60px" : "220px";
   const accentColor = profile ? (investorTypeAccent[profile.investor.type] || "#22C55E") : "#22C55E";
 
   return (
-    <div className="flex h-full" style={{ background: "#0D1117" }}>
+    <div
+      className="flex h-full"
+      style={{
+        background: "#0D1117",
+        "--sidebar-width": sidebarWidth
+      }}
+    >
       {/* Sidebar */}
       <aside
-        className="flex-shrink-0 flex flex-col h-full transition-all duration-200"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className="flex-shrink-0 flex flex-col h-full transition-all duration-300 ease-in-out"
         style={{
-          width: collapsed ? "60px" : "220px",
+          width: "var(--sidebar-width)",
           background: "#0D1117",
           borderRight: "1px solid rgba(255,255,255,0.06)",
         }}
       >
         {/* Logo */}
         <div
-          className="flex items-center gap-3 px-4 py-5"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", minHeight: "60px" }}
+          className="flex items-center gap-3 px-4"
+          style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", height: "60px" }}
         >
           <div
             className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold"
@@ -235,62 +273,78 @@ export default function AppShell({ children, pageTitle, pageSubtitle }) {
           >
             M
           </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white leading-tight truncate">MyMoneyPlant</p>
-              <p className="text-xs" style={{ color: "#A1A1AA" }}>Wealth Platform</p>
-            </div>
-          )}
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+            collapsed ? "w-0 opacity-0" : "w-32 opacity-100"
+          }`}>
+            <p className="text-sm font-semibold text-white leading-tight truncate">MyMoneyPlant</p>
+            <p className="text-xs truncate" style={{ color: "#A1A1AA" }}>Wealth Platform</p>
+          </div>
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ href, label, Icon }) => {
-            const isActive = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                title={collapsed ? label : undefined}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group"
-                style={{
-                  background: isActive ? "rgba(34,197,94,0.1)" : "transparent",
-                  color: isActive ? "#22C55E" : "#A1A1AA",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
-                    e.currentTarget.style.color = "#ffffff";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#A1A1AA";
-                  }
-                }}
-              >
-                <span className="flex-shrink-0">
-                  <Icon />
-                </span>
-                {!collapsed && (
-                  <span className="text-sm font-medium truncate">{label}</span>
-                )}
-                {!collapsed && isActive && (
-                  <span
-                    className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: "#22C55E" }}
-                  />
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 py-3 px-2 space-y-4 overflow-y-auto">
+          {navSections.map((section, sIdx) => (
+            <div key={section.title} className="space-y-1.5">
+              <p className={`px-3 text-[9px] font-bold text-gray-500 uppercase tracking-widest transition-all duration-300 ease-in-out truncate ${
+                collapsed ? "h-0 opacity-0 overflow-hidden" : "h-auto opacity-100"
+              }`}>
+                {section.title}
+              </p>
+              {collapsed && sIdx > 0 && <hr className="border-white/5 my-2 mx-1 transition-opacity duration-300" />}
+              <div className="space-y-0.5">
+                {section.items.map(({ href, label, Icon }) => {
+                  const isActive = pathname === href;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      title={collapsed ? label : undefined}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group"
+                      style={{
+                        background: isActive ? "rgba(34,197,94,0.1)" : "transparent",
+                        color: isActive ? "#22C55E" : "#A1A1AA",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                          e.currentTarget.style.color = "#ffffff";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "transparent";
+                          e.currentTarget.style.color = "#A1A1AA";
+                        }
+                      }}
+                    >
+                      <span className="flex-shrink-0">
+                        <Icon />
+                      </span>
+                      <span className={`text-sm font-medium transition-all duration-300 ease-in-out whitespace-nowrap truncate ${
+                        collapsed ? "w-0 opacity-0 overflow-hidden" : "w-32 opacity-100"
+                      }`}>
+                        {label}
+                      </span>
+                      {isActive && (
+                        <span
+                          className={`ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0 transition-opacity duration-300 ${
+                            collapsed ? "opacity-0" : "opacity-100"
+                          }`}
+                          style={{ background: "#22C55E" }}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Bottom Section */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           {/* Profile */}
-          {profile && !collapsed && (
+          {profile && (
             <div className="px-4 py-3">
               <div className="flex items-center gap-2 mb-2">
                 <div
@@ -299,18 +353,22 @@ export default function AppShell({ children, pageTitle, pageSubtitle }) {
                 >
                   {(profile.name || "U")[0].toUpperCase()}
                 </div>
-                <div className="overflow-hidden">
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out whitespace-nowrap ${
+                  collapsed ? "w-0 opacity-0" : "w-32 opacity-100"
+                }`}>
                   <p className="text-xs font-medium text-white truncate">{profile.name || "Investor"}</p>
                   <p className="text-xs truncate" style={{ color: "#A1A1AA" }}>{profile.investor.type}</p>
                 </div>
               </div>
               <button
                 onClick={clearProfile}
-                className="w-full text-xs py-1.5 rounded-md transition-colors"
+                className={`w-full text-xs py-1.5 rounded-md transition-all duration-300 text-left ${
+                  collapsed ? "h-0 opacity-0 overflow-hidden py-0" : "h-auto opacity-100 py-1.5 px-2"
+                }`}
                 style={{ color: "#A1A1AA", background: "transparent" }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#DC2626";
-                  e.currentTarget.style.background = "rgba(220,38,38,0.08)";
+                  e.currentTarget.style.color = "white";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.04)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.color = "#A1A1AA";
@@ -321,21 +379,6 @@ export default function AppShell({ children, pageTitle, pageSubtitle }) {
               </button>
             </div>
           )}
-          {/* Collapse toggle */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center justify-center py-3 transition-colors"
-            style={{ color: "#A1A1AA" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#A1A1AA"; }}
-          >
-            <span
-              className="transition-transform duration-200"
-              style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
-            >
-              <IconChevron />
-            </span>
-          </button>
         </div>
       </aside>
 
@@ -343,46 +386,47 @@ export default function AppShell({ children, pageTitle, pageSubtitle }) {
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top Bar */}
         <header
-          className="flex-shrink-0 flex items-center px-6"
+          className="flex-shrink-0 flex items-center border-b border-white/5"
           style={{
             height: "60px",
             background: "rgba(13,17,23,0.9)",
             backdropFilter: "blur(12px)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
           }}
         >
-          <div className="flex-1">
-            {pageTitle && (
-              <div>
-                <h1 className="text-sm font-semibold text-white">{pageTitle}</h1>
-                {pageSubtitle && (
-                  <p className="text-xs" style={{ color: "#A1A1AA" }}>{pageSubtitle}</p>
-                )}
+          <div className={`w-full ${maxWidth} mx-auto px-6 flex items-center justify-between`}>
+            <div className="flex-1">
+              {pageTitle && (
+                <div>
+                  <h1 className="text-sm font-semibold text-white">{pageTitle}</h1>
+                  {pageSubtitle && (
+                    <p className="text-xs" style={{ color: "#A1A1AA" }}>{pageSubtitle}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {profile && (
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: accentColor, color: "#000" }}
+                  >
+                    {(profile.name || "U")[0].toUpperCase()}
+                  </div>
+                  <span className="text-xs text-white font-medium">{profile.name || "Investor"}</span>
+                  <span
+                    className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}
+                  >
+                    {profile.investor.type}
+                  </span>
+                </div>
               </div>
             )}
           </div>
-          {profile && (
-            <div className="flex items-center gap-3">
-              <div
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-              >
-                <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                  style={{ background: accentColor, color: "#000" }}
-                >
-                  {(profile.name || "U")[0].toUpperCase()}
-                </div>
-                <span className="text-xs text-white font-medium">{profile.name || "Investor"}</span>
-                <span
-                  className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                  style={{ background: "rgba(34,197,94,0.12)", color: "#22C55E" }}
-                >
-                  {profile.investor.type}
-                </span>
-              </div>
-            </div>
-          )}
         </header>
 
         {/* Page Content */}

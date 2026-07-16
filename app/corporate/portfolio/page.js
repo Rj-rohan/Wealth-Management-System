@@ -5,6 +5,8 @@ import CosmicBackground from "../../components/CosmicBackground";
 import GlassCard from "../../components/GlassCard";
 import AnimatedNumber from "../../components/AnimatedNumber";
 import ShimmerLoader from "../../components/ShimmerLoader";
+import SearchableDropdown from "../../components/SearchableDropdown";
+import { stocks } from "../../buffett-screener/data/stocks";
 
 export default function CorporatePortfolio() {
   const [investments, setInvestments] = useState([]);
@@ -57,6 +59,32 @@ export default function CorporatePortfolio() {
 
     const quantity = Number(form.quantity);
     const buyPrice = Number(form.buyPrice);
+    const targetReturn = Number(form.targetReturnPct);
+
+    if (isNaN(quantity) || quantity <= 0) {
+      setError("Quantity must be a positive number.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (isNaN(buyPrice) || buyPrice <= 0) {
+      setError("Buy price must be a positive number.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (isNaN(targetReturn) || targetReturn <= 0 || targetReturn > 100) {
+      setError("Target return percentage must be between 0% and 100%.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!form.instrumentName) {
+      setError("Please specify or select an instrument name.");
+      setSubmitting(false);
+      return;
+    }
+
     const amountInvested = quantity * buyPrice;
 
     try {
@@ -123,7 +151,7 @@ export default function CorporatePortfolio() {
   const pendingHoldings = investments.filter((i) => i.approvalStatus === "pending");
 
   return (
-    <AppShell pageTitle="Corporate Portfolio" pageSubtitle="Deploy corporate treasury surpluses and manage asset sign-offs">
+    <AppShell pageTitle="Corporate Portfolio" pageSubtitle="Deploy corporate treasury surpluses and manage asset sign-offs" maxWidth="max-w-6xl">
       <CosmicBackground />
       <div className="px-6 py-6 max-w-6xl mx-auto space-y-6 relative z-10" id="corporate-portfolio-root">
         
@@ -212,6 +240,24 @@ export default function CorporatePortfolio() {
               )}
               <form onSubmit={handleBuy} className="space-y-4">
                 <div>
+                  <label className="block text-xs text-gray-400 mb-1">Security Ticker / Code</label>
+                  <SearchableDropdown
+                    options={stocks.map(s => ({ id: s.ticker, name: `${s.ticker} (${s.name})` }))}
+                    value={form.ticker}
+                    onChange={(val) => {
+                      const stock = stocks.find(s => s.ticker === val);
+                      setForm({
+                        ...form,
+                        ticker: val,
+                        instrumentName: stock ? stock.name : form.instrumentName,
+                        buyPrice: stock ? stock.price.toString() : form.buyPrice
+                      });
+                    }}
+                    placeholder="Search stock ticker..."
+                    required
+                  />
+                </div>
+                <div>
                   <label className="block text-xs text-gray-400 mb-1">Company / Fund Name</label>
                   <input
                     type="text"
@@ -220,17 +266,6 @@ export default function CorporatePortfolio() {
                     className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none"
                     value={form.instrumentName}
                     onChange={(e) => setForm({ ...form, instrumentName: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-400 mb-1">Security Ticker / Code</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. LIQUIDCASE"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none"
-                    value={form.ticker}
-                    onChange={(e) => setForm({ ...form, ticker: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-2">

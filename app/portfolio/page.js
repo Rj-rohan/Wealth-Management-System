@@ -6,6 +6,7 @@ import { useUser } from "../context/UserContext";
 import { stocks } from "../buffett-screener/data/stocks";
 import { calcBuffettScore } from "../buffett-screener/data/scoring";
 import AppShell from "../components/AppShell";
+import SearchableDropdown from "../components/SearchableDropdown";
 
 function getInitialHoldings() {
   try { return JSON.parse(localStorage.getItem("wm_holdings") || "[]"); } catch { return []; }
@@ -27,6 +28,7 @@ export default function Portfolio() {
   const [holdings, setHoldings] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ ticker: "", qty: "", buyPrice: "", currentPrice: "" });
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (loaded && !profile) router.push("/onboarding");
@@ -111,7 +113,7 @@ export default function Portfolio() {
   ];
 
   return (
-    <AppShell pageTitle="Portfolio Tracker" pageSubtitle="Holdings, P&L and smart suggestions">
+    <AppShell pageTitle="Portfolio Tracker" pageSubtitle="Holdings, P&L and smart suggestions" maxWidth="max-w-5xl">
       <div className="px-6 py-6 max-w-5xl mx-auto space-y-6">
 
         {/* Summary Cards */}
@@ -170,30 +172,87 @@ export default function Portfolio() {
               style={{ background: "#161B22", border: "1px solid rgba(255,255,255,0.07)" }}
             >
               <p className="text-xs font-medium mb-3" style={{ color: "#A1A1AA" }}>New Position</p>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
-                {[
-                  { key: "ticker", placeholder: "Ticker (e.g. TCS)", type: "text" },
-                  { key: "qty", placeholder: "Quantity", type: "number" },
-                  { key: "buyPrice", placeholder: "Buy Price (₹)", type: "number" },
-                  { key: "currentPrice", placeholder: "Current Price (₹)", type: "number" },
-                ].map((f) => (
-                  <input
-                    key={f.key}
-                    type={f.type}
-                    placeholder={f.placeholder}
-                    value={form[f.key]}
-                    onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
-                    style={inputStyle}
-                    onFocus={(e) => { e.target.style.borderColor = "rgba(34,197,94,0.5)"; }}
-                    onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.1)"; }}
+              {error && (
+                <p className="text-xs text-red-400 mb-3">{error}</p>
+              )}
+              <div className="flex flex-col md:flex-row md:items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-[10px] text-gray-400 mb-1">Select Ticker</label>
+                  <SearchableDropdown
+                    options={stocks.map(s => ({ id: s.ticker, name: `${s.ticker} (${s.name})` }))}
+                    value={form.ticker}
+                    onChange={(val) => {
+                      const stock = stocks.find(s => s.ticker === val);
+                      setForm({
+                        ...form,
+                        ticker: val,
+                        buyPrice: stock ? stock.price.toString() : form.buyPrice,
+                        currentPrice: stock ? stock.price.toString() : form.currentPrice
+                      });
+                    }}
+                    placeholder="Search stock ticker..."
+                    required
                   />
-                ))}
+                </div>
+                <div className="w-full md:w-32">
+                  <label className="block text-[10px] text-gray-400 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    placeholder="Quantity"
+                    value={form.qty}
+                    onChange={(e) => setForm((p) => ({ ...p, qty: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </div>
+                <div className="w-full md:w-32">
+                  <label className="block text-[10px] text-gray-400 mb-1">Buy Price (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="Buy Price"
+                    value={form.buyPrice}
+                    onChange={(e) => setForm((p) => ({ ...p, buyPrice: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </div>
+                <div className="w-full md:w-32">
+                  <label className="block text-[10px] text-gray-400 mb-1">Current Price (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="Current Price"
+                    value={form.currentPrice}
+                    onChange={(e) => setForm((p) => ({ ...p, currentPrice: e.target.value }))}
+                    style={inputStyle}
+                  />
+                </div>
                 <button
-                  onClick={addHolding}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-                  style={{ background: "#22C55E", color: "#000" }}
+                  onClick={() => {
+                    const qty = Number(form.qty);
+                    const buyPrice = Number(form.buyPrice);
+                    const currentPrice = Number(form.currentPrice);
+
+                    if (!form.ticker) {
+                      setError("Please select a stock ticker.");
+                      return;
+                    }
+                    if (isNaN(qty) || qty <= 0) {
+                      setError("Quantity must be a positive number.");
+                      return;
+                    }
+                    if (isNaN(buyPrice) || buyPrice <= 0) {
+                      setError("Buy price must be a positive number.");
+                      return;
+                    }
+                    if (isNaN(currentPrice) || currentPrice <= 0) {
+                      setError("Current price must be a positive number.");
+                      return;
+                    }
+                    
+                    setError("");
+                    addHolding();
+                  }}
+                  className="px-5 py-2.5 bg-green-500 hover:bg-green-600 text-black text-xs font-bold rounded-lg transition-colors cursor-pointer"
                 >
-                  Add
+                  Add Holding
                 </button>
               </div>
             </div>

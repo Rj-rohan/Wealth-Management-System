@@ -53,6 +53,24 @@ export default function CorporateTreasury() {
     setError("");
     setMessage("");
 
+    const amountNum = Number(form.amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setError("Transfer amount must be a positive number.");
+      setTransferring(false);
+      return;
+    }
+    if (form.fromAccountId === form.toAccountId) {
+      setError("Source and destination accounts must be different.");
+      setTransferring(false);
+      return;
+    }
+    const sourceAcc = accounts.find(a => a.id === form.fromAccountId);
+    if (sourceAcc && sourceAcc.balance < amountNum) {
+      setError(`Insufficient balance. Available balance in ${sourceAcc.name} is ₹${sourceAcc.balance.toLocaleString('en-IN')}`);
+      setTransferring(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/treasury/transfers", {
         method: "POST",
@@ -92,7 +110,7 @@ export default function CorporateTreasury() {
   const excessIdleCash = Math.max(0, consolidatedCash - idleCashLimit);
 
   return (
-    <AppShell pageTitle="Treasury Accounts" pageSubtitle="Liquidity monitoring, automated inter-bank sweeps, and yield management">
+    <AppShell pageTitle="Treasury Accounts" pageSubtitle="Liquidity monitoring, automated inter-bank sweeps, and yield management" maxWidth="max-w-6xl">
       <CosmicBackground />
       <div className="px-6 py-6 max-w-6xl mx-auto space-y-6 relative z-10" id="corporate-treasury-root">
         

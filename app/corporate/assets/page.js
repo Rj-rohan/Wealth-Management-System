@@ -5,6 +5,7 @@ import CosmicBackground from "../../components/CosmicBackground";
 import GlassCard from "../../components/GlassCard";
 import AnimatedNumber from "../../components/AnimatedNumber";
 import ShimmerLoader from "../../components/ShimmerLoader";
+import SearchableDropdown from "../../components/SearchableDropdown";
 
 export default function CorporateAssets() {
   const [assets, setAssets] = useState([]);
@@ -60,6 +61,27 @@ export default function CorporateAssets() {
     e.preventDefault();
     setAdding(true);
     setError("");
+
+    const price = Number(form.purchasePrice);
+    const life = Number(form.usefulLifeMonths);
+
+    if (isNaN(price) || price <= 0) {
+      setError("Acquisition cost must be a positive number.");
+      setAdding(false);
+      return;
+    }
+
+    if (isNaN(life) || life <= 0) {
+      setError("Useful life must be a positive number.");
+      setAdding(false);
+      return;
+    }
+
+    if (!form.category) {
+      setError("Please select an asset category.");
+      setAdding(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/assets", {
@@ -126,7 +148,7 @@ export default function CorporateAssets() {
   const disposedAssets = assets.filter(a => a.status === 'disposed');
 
   return (
-    <AppShell pageTitle="Corporate Assets" pageSubtitle="Track physical property, digital IP, and depreciation cycles">
+    <AppShell pageTitle="Corporate Assets" pageSubtitle="Track physical property, digital IP, and depreciation cycles" maxWidth="max-w-6xl">
       <CosmicBackground />
       <div className="px-6 py-6 max-w-6xl mx-auto space-y-6 relative z-10" id="corporate-assets-root">
         
@@ -194,23 +216,21 @@ export default function CorporateAssets() {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Category</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. IT Hardware"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none"
+                    <label className="block text-[10px] text-gray-400 mb-1">Category</label>
+                    <SearchableDropdown
+                      options={["Real Estate", "Office Premises", "IT Hardware", "Software Licenses", "Intellectual Property", "Office Furniture", "Company Vehicles"]}
                       value={form.category}
-                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      onChange={(val) => setForm({ ...form, category: val })}
+                      placeholder="Select category..."
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Location</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. AWS Mumbai"
-                      className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none"
+                    <label className="block text-[10px] text-gray-400 mb-1">Location</label>
+                    <SearchableDropdown
+                      options={["Mumbai HQ", "AWS Cloud", "Delhi Office", "Pune Hub", "Bengaluru Tech Park"]}
                       value={form.location}
-                      onChange={(e) => setForm({ ...form, location: e.target.value })}
+                      onChange={(val) => setForm({ ...form, location: val })}
+                      placeholder="Select location..."
                     />
                   </div>
                 </div>

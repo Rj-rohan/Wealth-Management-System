@@ -58,6 +58,17 @@ export default function ComplianceDashboard() {
     setAddingDeadline(true);
     setError("");
 
+    if (!form.title.trim()) {
+      setError("Filing / task title cannot be empty.");
+      setAddingDeadline(false);
+      return;
+    }
+    if (!form.dueDate) {
+      setError("Due date is required.");
+      setAddingDeadline(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/compliance/deadlines", {
         method: "POST",
@@ -85,7 +96,7 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <AppShell pageTitle="Audit & Compliance" pageSubtitle="Cryptographic immutable audit trails and tax filing schedules">
+    <AppShell pageTitle="Audit & Compliance" pageSubtitle="Cryptographic immutable audit trails and tax filing schedules" maxWidth="max-w-6xl">
       <CosmicBackground />
       <div className="px-6 py-6 max-w-6xl mx-auto space-y-6 relative z-10" id="corporate-compliance-root">
         

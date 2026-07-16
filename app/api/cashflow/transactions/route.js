@@ -49,7 +49,16 @@ export async function POST(request) {
       date: body.date || new Date().toISOString(),
       bankAccountId: body.bankAccountId,
       description: body.description || '',
-      reconcileStatus: body.reconcileStatus || 'pending'
+      reconcileStatus: body.reconcileStatus || 'pending',
+      paymentMethod: body.paymentMethod || 'Bank Transfer',
+      currency: body.currency || 'INR',
+      department: body.department || '',
+      project: body.project || '',
+      employee: body.employee || '',
+      vendor: body.vendor || '',
+      customer: body.customer || '',
+      taxRate: body.taxRate || 'GST 0%',
+      dueDate: body.dueDate || body.date || new Date().toISOString().split('T')[0]
     };
 
     if (newTx.type === 'income') {
