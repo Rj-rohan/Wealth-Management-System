@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import { stocks } from "../buffett-screener/data/stocks";
 import { calcBuffettScore } from "../buffett-screener/data/scoring";
@@ -21,12 +22,19 @@ const inputStyle = {
 };
 
 export default function Portfolio() {
-  const { profile } = useUser();
+  const { profile, loaded } = useUser();
+  const router = useRouter();
   const [holdings, setHoldings] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ ticker: "", qty: "", buyPrice: "", currentPrice: "" });
 
+  useEffect(() => {
+    if (loaded && !profile) router.push("/onboarding");
+  }, [loaded, profile, router]);
+
   useEffect(() => { setHoldings(getInitialHoldings()); }, []);
+
+  if (!loaded || !profile) return null;
 
   function saveHoldings(list) {
     setHoldings(list);

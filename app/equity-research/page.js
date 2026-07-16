@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import AppShell from "../components/AppShell";
 
@@ -106,9 +107,16 @@ const riskConfig = {
 };
 
 export default function EquityResearch() {
-  const { profile } = useUser();
+  const { profile, loaded } = useUser();
+  const router = useRouter();
   const [selected, setSelected] = useState(null);
   const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    if (loaded && !profile) router.push("/onboarding");
+  }, [loaded, profile, router]);
+
+  if (!loaded || !profile) return null;
 
   const displayed = filter === "recommended" && profile
     ? researchData.filter((r) => r.suitableFor.includes(profile.investor.type))

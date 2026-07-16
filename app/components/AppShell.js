@@ -118,18 +118,85 @@ function IconReports() {
   );
 }
 
+function IconCompany() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18"></path>
+      <path d="M9 8h1"></path>
+      <path d="M9 12h1"></path>
+      <path d="M9 16h1"></path>
+      <path d="M14 8h1"></path>
+      <path d="M14 12h1"></path>
+      <path d="M14 16h1"></path>
+      <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+    </svg>
+  );
+}
+
+function IconAssets() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+    </svg>
+  );
+}
+
+function IconBank() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18"></path>
+      <path d="M3 10h18"></path>
+      <path d="M5 6l7-3 7 3"></path>
+      <path d="M4 10v11"></path>
+      <path d="M20 10v11"></path>
+      <path d="M8 14v3"></path>
+      <path d="M12 14v3"></path>
+      <path d="M16 14v3"></path>
+    </svg>
+  );
+}
+
+function IconBook() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+    </svg>
+  );
+}
+
+function IconShield() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+    </svg>
+  );
+}
+
 const navItems = [
-  { href: "/", label: "Dashboard", Icon: IconDashboard },
-  { href: "/portfolio", label: "Portfolio", Icon: IconPortfolio },
+  // --- Retail Investor ---
+  { href: "/", label: "Retail Dashboard", Icon: IconDashboard },
+  { href: "/portfolio", label: "Retail Portfolio", Icon: IconPortfolio },
   { href: "/buffett-screener", label: "Screener", Icon: IconScreener },
   { href: "/equity-research", label: "Research", Icon: IconResearch },
   { href: "/shareholder-letters", label: "Letters", Icon: IconLetters },
-  { href: "/ai-cfo", label: "AI CFO", Icon: IconAICFO },
+  
+  // --- Admin Console ---
+  { href: "/corporate", label: "Corp Dashboard", Icon: IconDashboard },
+  { href: "/corporate/company", label: "Company Profile", Icon: IconCompany },
+  { href: "/corporate/assets", label: "Assets", Icon: IconAssets },
+  { href: "/corporate/portfolio", label: "Corp Allocation", Icon: IconPortfolio },
+  { href: "/corporate/treasury", label: "Treasury Accounts", Icon: IconBank },
+  { href: "/corporate/cashflow", label: "Cash Flow Ledger", Icon: IconBook },
+  { href: "/corporate/compliance", label: "Audit & Compliance", Icon: IconShield },
+  
+  // --- Advanced AI Insights ---
+  { href: "/ai-cfo", label: "AI CFO Advisor", Icon: IconAICFO },
   { href: "/market-pulse", label: "Market Pulse", Icon: IconMarketPulse },
-  { href: "/risk-radar", label: "Risk Radar", Icon: IconRiskRadar },
-  { href: "/branch-intelligence", label: "Branches", Icon: IconBranches },
-  { href: "/treasury-autopilot", label: "Treasury AI", Icon: IconTreasury },
-  { href: "/smart-reports", label: "Reports", Icon: IconReports },
+  { href: "/treasury-autopilot", label: "Treasury Forecasting", Icon: IconTreasury },
+  { href: "/risk-radar", label: "Risk Stress-Testing", Icon: IconRiskRadar },
+  { href: "/branch-intelligence", label: "Branch mapping", Icon: IconBranches },
+  { href: "/smart-reports", label: "Smart Reports PDF", Icon: IconReports },
 ];
 
 const investorTypeAccent = {

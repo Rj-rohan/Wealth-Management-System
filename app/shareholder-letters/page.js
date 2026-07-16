@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useUser } from "../context/UserContext";
 import AppShell from "../components/AppShell";
 
@@ -171,10 +172,17 @@ const tagColors = {
 const allTags = [...new Set(letters.flatMap((l) => l.tags))];
 
 export default function ShareholderLetters() {
-  const { profile } = useUser();
+  const { profile, loaded } = useUser();
+  const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState(null);
   const [expanded, setExpanded] = useState(null);
+
+  useEffect(() => {
+    if (loaded && !profile) router.push("/onboarding");
+  }, [loaded, profile, router]);
+
+  if (!loaded || !profile) return null;
 
   const displayed = letters.filter((l) => {
     const matchesProfile = filter === "all" || (profile && l.relevantFor.includes(profile.investor.type));

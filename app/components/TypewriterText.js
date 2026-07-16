@@ -20,7 +20,7 @@ export default function TypewriterText({ text = "", speed = 18, onComplete, clas
       }
     }, speed);
     return () => clearInterval(interval);
-  }, [text, speed]);
+  }, [text, speed, onComplete]);
 
   return (
     <span className={className} style={style}>

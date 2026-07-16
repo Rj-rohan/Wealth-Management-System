@@ -167,7 +167,7 @@ export default function MarketPulsePage() {
         {error && <ErrorCard message={error} onRetry={handleRefresh} />}
 
         {/* Main Content */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+        <div className="market-pulse-grid">
 
           {/* Left: Heat Map */}
           <div style={{ minWidth: 0 }}>
@@ -345,8 +345,13 @@ export default function MarketPulsePage() {
           </div>
         </div>
 
-        {/* CSS Animations */}
+         {/* CSS Animations */}
         <style jsx global>{`
+          .market-pulse-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+          }
           @keyframes tickerScroll {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
