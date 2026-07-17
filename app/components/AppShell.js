@@ -124,6 +124,7 @@ const navItems = [
   { href: "/buffett-screener", label: "Screener", Icon: IconScreener },
   { href: "/equity-research", label: "Research", Icon: IconResearch },
   { href: "/shareholder-letters", label: "Letters", Icon: IconLetters },
+  { href: "/warren-buffett-methodology", label: "Methodology", Icon: IconAICFO },
   { href: "/ai-cfo", label: "AI CFO", Icon: IconAICFO },
   { href: "/market-pulse", label: "Market Pulse", Icon: IconMarketPulse },
   { href: "/risk-radar", label: "Risk Radar", Icon: IconRiskRadar },
