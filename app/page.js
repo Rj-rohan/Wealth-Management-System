@@ -61,6 +61,17 @@ const features = [
     desc: "The 6 core principles and 100-point scoring formula behind every stock rating on this platform.",
     accent: "#F59E0B",
   },
+  {
+    href: "/watchlist",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" />
+      </svg>
+    ),
+    title: "Watchlist",
+    desc: "Track companies you've assessed with Buffett's methodology. Sort, search, and manage your shortlist.",
+    accent: "#D4AF37",
+  },
 ];
 
 const typeAccents = {
