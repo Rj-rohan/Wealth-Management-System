@@ -21,3 +21,8 @@ export { default as MotionCard } from "./MotionCard";
 export { default as StatusBadge } from "./StatusBadge";
 export { default as Pagination } from "./Pagination";
 export { default as SegmentedControl } from "./SegmentedControl";
+// Phase 3
+export { default as ClientSelector } from "./ClientSelector";
+export { default as ScoreRing } from "./ScoreRing";
+export { default as MetricRow } from "./MetricRow";
+export { default as RangeSlider } from "./RangeSlider";

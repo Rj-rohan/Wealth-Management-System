@@ -38,19 +38,16 @@ export const WORKING_DAYS = [
 ];
 
 export const TIMEZONES = [
+  "Asia/Kolkata",
   "UTC",
   "America/New_York",
   "America/Chicago",
   "America/Los_Angeles",
   "Europe/London",
-  "Europe/Berlin",
-  "Asia/Dubai",
-  "Asia/Kolkata",
   "Asia/Singapore",
-  "Australia/Sydney",
 ];
 
-export const CURRENCIES = ["USD", "EUR", "GBP", "INR", "AED", "SGD", "AUD"];
+export const CURRENCIES = ["INR"];
 
 export const CONSULTATION_DURATIONS = [
   { value: "30", label: "30 minutes" },

@@ -9,16 +9,16 @@ export function formatDate(value, opts = { day: "numeric", month: "short", year:
   }
 }
 
-export function formatCurrency(amount, currency = "USD") {
+export function formatCurrency(amount) {
   const n = Number(amount || 0);
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency,
+      currency: "INR",
       maximumFractionDigits: 0,
     }).format(n);
   } catch {
-    return `${currency} ${n.toLocaleString()}`;
+    return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   }
 }
 
@@ -47,17 +47,17 @@ export function initials(name = "") {
     .join("");
 }
 
-export function formatCompact(amount, currency = "USD") {
+export function formatCompact(amount) {
   const n = Number(amount || 0);
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency,
+      currency: "INR",
       notation: "compact",
       maximumFractionDigits: 1,
     }).format(n);
   } catch {
-    return `${currency} ${n.toLocaleString()}`;
+    return `₹${n.toLocaleString("en-IN")}`;
   }
 }
 

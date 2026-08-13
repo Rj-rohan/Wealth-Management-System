@@ -7,7 +7,7 @@ export default function SegmentedControl({ options = [], value, onChange, size =
   return (
     <div className="inline-flex rounded-xl p-1" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
       {options.map((opt) => {
-        const val = typeof opt === "string" ? opt : opt.value;
+        const val = typeof opt === "string" ? opt : (opt.value !== undefined ? opt.value : opt.id);
         const label = typeof opt === "string" ? opt : opt.label;
         const Icon = typeof opt === "object" ? opt.icon : null;
         const active = val === value;

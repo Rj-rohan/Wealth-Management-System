@@ -9,6 +9,15 @@ import {
   BarChart3,
   UserRound,
   Settings,
+  TrendingUp,
+  Target,
+  FileText,
+  LineChart,
+  PieChart,
+  Shield,
+  Lightbulb,
+  FileBarChart,
+  GitBranch,
 } from "lucide-react";
 
 // Grouped sidebar navigation. New Phase 2 workspace modules sit alongside the
@@ -25,6 +34,20 @@ export const NAV_GROUPS = [
       { href: "/documents", label: "Documents", icon: FolderClosed },
       { href: "/notes", label: "Notes", icon: StickyNote },
       { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Advisory",
+    items: [
+      { href: "/financial-analysis", label: "Financial Analysis", icon: TrendingUp },
+      { href: "/goals", label: "Goal Planning", icon: Target },
+      { href: "/financial-plans", label: "Financial Plans", icon: FileText },
+      { href: "/investments", label: "Investments", icon: LineChart },
+      { href: "/portfolio", label: "Portfolio", icon: PieChart },
+      { href: "/risk-assessment", label: "Risk Assessment", icon: Shield },
+      { href: "/recommendations", label: "Recommendations", icon: Lightbulb },
+      { href: "/reports", label: "Reports", icon: FileBarChart },
+      { href: "/scenario-planner", label: "Scenario Planner", icon: GitBranch },
     ],
   },
   {

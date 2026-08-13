@@ -12,6 +12,10 @@ import LatestMessages from "@/features/dashboard/components/LatestMessages";
 import RecentDocuments from "@/features/dashboard/components/RecentDocuments";
 import TodaysPriorities from "@/features/dashboard/components/TodaysPriorities";
 import QuickActions from "@/features/dashboard/components/QuickActions";
+import RecentPlans from "@/features/dashboard/components/RecentPlans";
+import GoalAchievementSummary from "@/features/dashboard/components/GoalAchievementSummary";
+import RiskAlerts from "@/features/dashboard/components/RiskAlerts";
+import ClientHealthScores from "@/features/dashboard/components/ClientHealthScores";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -39,6 +43,18 @@ export default function DashboardPage() {
                 <TodaysPriorities />
                 <LatestMessages conversations={data?.conversations ?? []} />
                 <RecentDocuments documents={data?.recentDocuments ?? []} />
+              </div>
+            </div>
+
+            {/* Phase 3 Advisory Widgets */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2 space-y-5">
+                <GoalAchievementSummary summary={data?.goalSummary} />
+                <RecentPlans plans={data?.plansDue ?? []} />
+              </div>
+              <div className="space-y-5">
+                <RiskAlerts alerts={data?.riskAlerts ?? []} />
+                <ClientHealthScores clients={data?.healthScores ?? []} />
               </div>
             </div>
           </div>

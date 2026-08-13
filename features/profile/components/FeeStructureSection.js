@@ -4,7 +4,7 @@ import { Banknote, Pencil, X } from "lucide-react";
 import { Card, CardHeader, Button, Input, Select } from "@/components/ui";
 import { useNotifications } from "@/context/NotificationContext";
 import { profileService } from "../services/profileService";
-import { FEE_FIELDS, CURRENCIES } from "@/constants/options";
+import { FEE_FIELDS } from "@/constants/options";
 import { formatCurrency } from "@/utils/format";
 
 export default function FeeStructureSection({ professional, onUpdated }) {
@@ -14,10 +14,10 @@ export default function FeeStructureSection({ professional, onUpdated }) {
   const [form, setForm] = useState({});
 
   const fees = professional?.fee_structure || {};
-  const currency = fees.currency || "USD";
+  const currency = "INR";
 
   function startEdit() {
-    const initial = { currency };
+    const initial = { currency: "INR" };
     FEE_FIELDS.forEach((f) => (initial[f.key] = fees[f.key] ?? ""));
     setForm(initial);
     setEditing(true);
@@ -58,14 +58,6 @@ export default function FeeStructureSection({ professional, onUpdated }) {
 
       {editing ? (
         <div className="space-y-3">
-          <Select
-            name="currency"
-            label="Currency"
-            options={CURRENCIES}
-            value={form.currency}
-            onChange={(e) => setForm((f) => ({ ...f, currency: e.target.value }))}
-            className="sm:max-w-[200px]"
-          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {FEE_FIELDS.map((f) => (
               <Input
@@ -97,7 +89,7 @@ export default function FeeStructureSection({ professional, onUpdated }) {
                 {f.label}
               </span>
               <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
-                {fees[f.key] ? formatCurrency(fees[f.key], currency) : "—"}
+                {fees[f.key] ? formatCurrency(fees[f.key]) : "—"}
               </span>
             </div>
           ))}
