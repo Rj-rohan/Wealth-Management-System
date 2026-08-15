@@ -3,11 +3,11 @@
 export default function Card({ children, className = "", padding = "p-5", hover = false, style = {}, ...props }) {
   return (
     <div
-      className={`rounded-2xl transition-all duration-200 ${padding} ${className}`}
+      className={`rounded-xl transition-all duration-200 ${padding} ${className}`}
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
+        boxShadow: "0 8px 22px rgba(0,0,0,0.12)",
         ...style,
       }}
       onMouseEnter={hover ? (e) => (e.currentTarget.style.borderColor = "var(--border-strong)") : undefined}

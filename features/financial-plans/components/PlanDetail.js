@@ -29,7 +29,7 @@ export default function PlanDetail({ plan }) {
       </Link>
 
       {/* Header */}
-      <div className="rounded-2xl p-6" style={{ background: "radial-gradient(600px circle at 100% 0%, rgba(99,102,241,0.12), transparent 50%), var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="rounded-xl p-6" style={{ background: "radial-gradient(600px circle at 100% 0%, rgba(22,217,106,0.1), transparent 50%), var(--surface)", border: "1px solid var(--border)" }}>
         <div className="flex items-start gap-4">
           <span className="flex items-center justify-center w-11 h-11 rounded-xl" style={{ background: "var(--primary-dim)", color: "var(--primary)" }}>
             <FileText size={20} />

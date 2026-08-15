@@ -22,7 +22,7 @@ export default function ReportPreview({ data }) {
       {/* Report Content */}
       <div className="rounded-2xl overflow-hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
         {/* Header */}
-        <div className="px-8 py-6" style={{ background: "radial-gradient(800px circle at 50% 0%, rgba(99,102,241,0.15), transparent 60%)", borderBottom: "1px solid var(--border)" }}>
+        <div className="px-8 py-6" style={{ background: "radial-gradient(800px circle at 50% 0%, rgba(22,217,106,0.1), transparent 60%)", borderBottom: "1px solid var(--border)" }}>
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2">

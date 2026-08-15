@@ -74,7 +74,7 @@ export default function ClientDetail({ id }) {
       {/* Header */}
       <div
         className="rounded-2xl p-6"
-        style={{ background: "radial-gradient(600px circle at 100% 0%, rgba(99,102,241,0.12), transparent 50%), var(--surface)", border: "1px solid var(--border)" }}
+        style={{ background: "radial-gradient(600px circle at 100% 0%, rgba(22,217,106,0.1), transparent 50%), var(--surface)", border: "1px solid var(--border)" }}
       >
         <div className="flex flex-wrap items-start gap-5">
           <Avatar name={client.name} size="xl" />

@@ -4,7 +4,7 @@ import { Loader2 } from "lucide-react";
 const VARIANTS = {
   primary: {
     background: "var(--primary)",
-    color: "#fff",
+    color: "#061009",
     border: "1px solid var(--primary)",
   },
   secondary: {
@@ -35,9 +35,9 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  sm: "text-xs px-3 py-1.5 rounded-lg gap-1.5",
-  md: "text-sm px-4 py-2.5 rounded-xl gap-2",
-  lg: "text-sm px-5 py-3 rounded-xl gap-2",
+  sm: "text-xs px-3 py-1.5 rounded-md gap-1.5",
+  md: "text-sm px-4 py-2.5 rounded-lg gap-2",
+  lg: "text-sm px-5 py-3 rounded-lg gap-2",
 };
 
 export default function Button({

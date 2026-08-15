@@ -38,7 +38,7 @@ export default function Select({
             const value = typeof opt === "string" ? opt : opt.value;
             const labelText = typeof opt === "string" ? opt : opt.label;
             return (
-              <option key={value} value={value} style={{ background: "#161D2E" }}>
+              <option key={value} value={value} style={{ background: "#1c222a" }}>
                 {labelText}
               </option>
             );

@@ -88,7 +88,7 @@ export default function PortfolioWorkspace() {
               <Card>
                 <CardHeader title="Portfolio Growth" icon={TrendingUp} />
                 <LineMulti data={data.performanceHistory} xKey="month" lines={[
-                  { dataKey: "value", name: "Portfolio", color: "#6366F1" },
+                  { dataKey: "value", name: "Portfolio", color: "#16D96A" },
                   { dataKey: "benchmark", name: "Benchmark", color: "#8A94A6", dashed: true },
                 ]} valueFormatter={(v) => formatCurrency(v)} />
               </Card>
@@ -151,7 +151,7 @@ export default function PortfolioWorkspace() {
             <Card>
               <CardHeader title="Performance vs Benchmark" icon={TrendingUp} />
               <LineMulti data={data.performanceHistory} xKey="month" height={360} lines={[
-                { dataKey: "value", name: "Portfolio", color: "#6366F1" },
+                { dataKey: "value", name: "Portfolio", color: "#16D96A" },
                 { dataKey: "benchmark", name: "Benchmark", color: "#8A94A6", dashed: true },
               ]} valueFormatter={(v) => formatCurrency(v)} />
             </Card>

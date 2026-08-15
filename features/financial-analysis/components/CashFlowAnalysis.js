@@ -31,7 +31,7 @@ export default function CashFlowAnalysis({ data, compact = false }) {
           lines={[
             { dataKey: "income", name: "Income", color: "#10B981" },
             { dataKey: "expenses", name: "Expenses", color: "#EF4444" },
-            { dataKey: "savings", name: "Savings", color: "#6366F1", dashed: true },
+            { dataKey: "savings", name: "Savings", color: "#16D96A", dashed: true },
           ]}
           valueFormatter={(v) => formatCurrency(v)}
         />

@@ -15,7 +15,7 @@ export default function AuthShell({ title, subtitle, children }) {
         className="hidden lg:flex flex-col justify-between w-[45%] p-12 relative overflow-hidden"
         style={{
           background:
-            "radial-gradient(900px circle at 20% 0%, rgba(99,102,241,0.18), transparent 45%), var(--surface)",
+            "radial-gradient(900px circle at 20% 0%, rgba(22,217,106,0.14), transparent 45%), var(--surface)",
           borderRight: "1px solid var(--border)",
         }}
       >

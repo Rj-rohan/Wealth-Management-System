@@ -35,7 +35,7 @@ export default function AppShell({ children, title, subtitle, notificationCount 
   }
 
   return (
-    <div className="flex h-full" style={{ background: "var(--background)" }}>
+    <div className="flex h-full" style={{ background: "transparent" }}>
       <Sidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}

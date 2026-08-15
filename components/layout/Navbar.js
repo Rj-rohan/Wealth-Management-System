@@ -24,8 +24,8 @@ export default function Navbar({ title, subtitle, user, onOpenMobile, onLogout, 
     <header
       className="flex-shrink-0 flex items-center gap-3 px-4 md:px-6"
       style={{
-        height: 64,
-        background: "rgba(10,14,26,0.85)",
+        height: 58,
+        background: "rgba(10, 15, 23, 0.92)",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--border)",
       }}

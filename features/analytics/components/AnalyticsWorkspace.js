@@ -61,7 +61,7 @@ export default function AnalyticsWorkspace() {
         <Reveal>
           <Card>
             <CardHeader title="Client Growth" subtitle="Cumulative clients over time" />
-            <AreaTrend data={data.clientGrowth} dataKey="clients" color="#6366F1" />
+            <AreaTrend data={data.clientGrowth} dataKey="clients" color="var(--primary)" />
           </Card>
         </Reveal>
 
