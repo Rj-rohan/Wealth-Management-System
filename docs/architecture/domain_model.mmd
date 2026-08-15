@@ -1,0 +1,83 @@
+classDiagram
+    direction TB
+    class User {
+        +UUID id
+        +String email
+        +String role
+        +String status
+    }
+    class ClientProfile {
+        +UUID id
+        +String risk_profile
+        +Decimal monthly_net_income
+        +String job_volatility
+        +Boolean has_dependents
+        +Integer age
+    }
+    class Goal {
+        +UUID id
+        +String name
+        +Decimal current_cost
+        +Date target_date
+        +Decimal earmarked_assets
+        +Decimal monthly_savings
+        +Decimal outside_sources
+        +Decimal future_cost
+        +Decimal shortfall
+        +updateTimeline()
+        +updateMonthlySavings()
+        +updateGoalCost()
+    }
+    class Asset {
+        +UUID id
+        +String name
+        +String category
+        +Decimal current_value
+        +Boolean is_liquid
+        +Date last_updated
+    }
+    class Liability {
+        +UUID id
+        +String name
+        +String category
+        +Decimal outstanding_balance
+        +Decimal interest_rate
+        +Decimal monthly_payment
+    }
+    class WealthHealthScore {
+        +UUID id
+        +Integer score
+        +Integer score_emergency_fund
+        +Integer score_debt_mgmt
+        +Integer score_savings_rate
+        +Integer score_portfolio_drift
+        +Integer score_retirement_readiness
+        +Integer score_insurance_protection
+        +Integer score_estate_planning
+        +DateTime updated_at
+        +calculateScore()
+    }
+    class Recommendation {
+        +UUID id
+        +String category
+        +String priority
+        +String alert_message
+        +String status
+        +DateTime created_at
+        +executeExposedTask()
+    }
+    class AuditLog {
+        +UUID id
+        +String action_type
+        +String detail
+        +DateTime timestamp
+        +String ip_address
+    }
+
+    User "1" --> "1" ClientProfile : has
+    User "1" --> "0..*" Goal : owns
+    User "1" --> "0..*" Asset : owns
+    User "1" --> "0..*" Liability : owns
+    User "1" --> "1" WealthHealthScore : scored_by
+    User "1" --> "0..*" Recommendation : receives
+    User "1" --> "0..*" AuditLog : triggers

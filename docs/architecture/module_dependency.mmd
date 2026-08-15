@@ -1,0 +1,34 @@
+flowchart TD
+    subgraph Core Platform Services
+        AuthService[Authentication & OAuth Service]
+        CRMService[CRM & Advisor Mapping Service]
+    end
+
+    subgraph Personal Wealth Management Cluster
+        PWMService[Personal Wealth Management Dashboard Service]
+        RuleEngine[Recommendation Rule Engine]
+        WHSEngine[Wealth Health Scoring Engine]
+        AICoach[AI Goal Coach & Explainer Service]
+    end
+
+    subgraph Specialized Planning Services
+        InvestService[Investment Management Module]
+        RetireService[Retirement Planning Module]
+        InsuranceService[Risk & Insurance Planning Module]
+    end
+
+    %% Dependencies
+    PWMService --> AuthService : "Authenticates Tokens"
+    PWMService --> CRMService : "Maps Advisor-Client Relationships"
+    
+    PWMService --> InvestService : "Pulls Account Balances & Holdings"
+    PWMService --> RetireService : "Pulls Retirement Scenarios"
+    PWMService --> InsuranceService : "Pulls Insurance Coverage Gaps"
+
+    PWMService --> WHSEngine : "Daily Score Recalculation"
+    PWMService --> RuleEngine : "Evaluates Metrics & Fires Alerts"
+    PWMService --> AICoach : "Provides Planning Context"
+
+    RuleEngine --> PWMService : "Pushes Recommendation Alerts"
+    WHSEngine --> PWMService : "Pushes WHS Snapshots"
+    AICoach --> PWMService : "Delivers Natural Language Advice"

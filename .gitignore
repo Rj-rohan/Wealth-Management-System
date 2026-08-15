@@ -1,41 +1,84 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# ─── Node.js & npm ─────────────────────────────────────────────────────────────
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+# NOTE: package-lock.json is intentionally NOT ignored.
+# Lock files must be version-controlled for reproducible CI/CD builds.
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
+# ─── Build outputs ─────────────────────────────────────────────────────────────
+dist/
+build/
 *.tsbuildinfo
-next-env.d.ts
+frontend/dist/
+backend/dist/
+
+# ─── Environment & secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+!.env.example
+
+# ─── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ─── OS & editor ───────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+
+# ─── Python artifacts (scripts/build_rag_knowledge.py) ─────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# ─── Private research & copyrighted source documents ───────────────────────────
+# Source books and internal research are never committed. To rebuild the RAG
+# knowledge base from them, see scripts/build_rag_knowledge.py and research/README.md.
+Weallth/
+research/source_documents/
+data/source_documents/
+
+# ─── RAG knowledge base (derived from copyrighted sources) ─────────────────────
+# rag_chunks.json and document_nodes.json contain copyrighted book text and must
+# not be committed. sample_rag_knowledge.json is a copyright-free placeholder.
+backend/src/services/rag/rag_knowledge.json
+backend/src/services/rag/rag_chunks.json
+backend/src/services/rag/document_nodes.json
+backend/src/services/rag/rag_out/
+backend/src/services/rag/images/
+backend/src/services/rag/page_archive/
+backend/src/services/rag/pgvector_embeddings_dump.json
+rag_out/
+
+# ─── Obsolete runtime data ─────────────────────────────────────────────────────
+data.json
+*.db
+*.sqlite
+
+# ─── Copyrighted / licensed document types ─────────────────────────────────────
+# Images (.png, .jpg, .svg) are NOT ignored — the app uses them for UI assets.
+*.epub
+*.pdf
+*.docx
+*.doc
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+
+# ─── Large binaries & media ────────────────────────────────────────────────────
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.mp4
+*.mov
+*.avi

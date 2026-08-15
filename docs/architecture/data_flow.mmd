@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    actor Client as Client / Advisor
+    participant FE as Frontend Dashboard
+    participant API as PWM API Gateway
+    participant PWM as PWM Service
+    participant IMS as Investment Mgmt Service
+    participant WHS as WHS Scoring Engine
+    participant RE as Recommendation Rule Engine
+    participant DB as PostgreSQL DB
+
+    Client->>FE: Onboard & Link Custodian Account
+    FE->>API: POST /api/v1/accounts/link
+    API->>PWM: Map Linked Account
+    PWM->>DB: Save Account Metadata & Status
+    PWM->>IMS: Trigger Holdings Sync (Incremental)
+    IMS-->>PWM: Return Holdings & Cash Balances
+    PWM->>DB: Update Assets Table (Linked Holdings)
+
+    Client->>FE: Input Financial Goal (e.g., Vacation)
+    FE->>API: POST /api/v1/goals
+    API->>PWM: Create Goal (Today Cost, Target Date, Earmarks)
+    PWM->>PWM: Calculate Future Value Cost & Compounded Asset Returns
+    PWM->>DB: Save Goal (with Future Cost & Shortfall)
+
+    Note over PWM, DB: Scheduled Async Batch Job (Daily)
+    DB->>WHS: Fetch Liquid Assets, Debt, Drifts, and Goal Shortfalls
+    WHS->>WHS: Compute Sub-Scores & Aggregate WHS
+    WHS->>DB: Save WHS Snapshot & History Log
+    
+    DB->>RE: Fetch Latest Financial Metrics
+    RE->>RE: Evaluate Rules (e.g., Emergency Fund Underfunded)
+    RE->>DB: Write Active Recommendation Alerts
+    
+    Client->>FE: Open Dashboard
+    FE->>API: GET /api/v1/users/{id}/wealth-health-score
+    API->>PWM: Fetch Score & active recommendations
+    PWM->>DB: Query snapshots & active alerts
+    DB-->>PWM: Return data
+    PWM-->>FE: Return JSON Response
+    FE->>Client: Render Score meter, charts, & action cards

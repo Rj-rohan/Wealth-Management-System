@@ -1,0 +1,389 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  // Migrations cannot run through a transaction pooler (Supabase port 6543),
+  // so Prisma Migrate uses the direct connection instead.
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+model User {
+  id                    String                     @id @default(uuid())
+  email                 String                     @unique
+  passwordHash          String                     @map("password_hash")
+  name                  String
+  role                  String                     @default("client")
+  onboardingComplete    Boolean                    @default(false) @map("onboarding_complete")
+  segment               String                     @default("Mass Market")
+  accounts              Account[]
+  advisorClients        AdvisorClientConsent[]     @relation("advisor")
+  clientAdvisors        AdvisorClientConsent[]     @relation("client")
+  assumptions           Assumptions?
+  clientProfile         ClientProfile?
+  complianceLogsAdvisor ComplianceSuitabilityLog[] @relation("complianceAdvisor")
+  complianceLogsUser    ComplianceSuitabilityLog[] @relation("complianceUser")
+  goals                 Goal[]
+  holdings              Holding[]
+  householdMembers      HouseholdMember[]
+  householdProfile      HouseholdProfile?
+  incomeProfile         IncomeProfile?
+  institutions          Institution[]
+  insuranceProfile      InsuranceProfile?
+  investorProfile       InvestorProfile?
+  liabilities           Liability[]
+  recommendations       RecommendationAlert[]
+  trackerHoldings       TrackerHolding[]
+  watchlistItems        WatchlistItem[]
+  whsHistory            WhsHistory[]
+
+  @@map("users")
+}
+
+/// Investing style captured during onboarding and used across the Markets
+/// workspace (screener thresholds, budget-aware suggestions, letter filtering).
+/// The classified fields are derived server-side by classifyInvestor().
+model InvestorProfile {
+  userId            String   @id @map("user_id")
+  age               Int
+  riskAppetite      String   @map("risk_appetite")
+  horizon           Int
+  monthlyInvestment Decimal  @default(0) @map("monthly_investment") @db.Decimal(14, 2)
+  goal              String
+  existingPortfolio Decimal  @default(0) @map("existing_portfolio") @db.Decimal(14, 2)
+  type              String
+  icon              String
+  description       String
+  buffettAdvice     String   @map("buffett_advice")
+  equityAllocation  Int      @map("equity_allocation")
+  debtAllocation    Int      @map("debt_allocation")
+  goldAllocation    Int      @map("gold_allocation")
+  maxStockPe        Int      @map("max_stock_pe")
+  minDividendYield  Decimal  @map("min_dividend_yield") @db.Decimal(6, 2)
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("investor_profiles")
+}
+
+/// Self-entered equity positions tracked in the Portfolio Tracker, with the
+/// user's own cost basis and mark price. Distinct from Holding, which models
+/// custodian-level assets across all asset classes for net-worth and WHS.
+model TrackerHolding {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  ticker       String
+  quantity     Decimal  @db.Decimal(18, 4)
+  buyPrice     Decimal  @map("buy_price") @db.Decimal(14, 2)
+  currentPrice Decimal  @map("current_price") @db.Decimal(14, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tracker_holdings")
+}
+
+/// Companies the user has scored with the Buffett methodology.
+model WatchlistItem {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  companyName String   @map("company_name")
+  score       Int
+  rating      String
+  assessedOn  String   @map("assessed_on")
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("watchlist_items")
+}
+
+model ClientProfile {
+  userId          String  @id @map("user_id")
+  age             Int
+  riskProfile     String  @default("Balanced") @map("risk_profile")
+  displayCurrency String  @default("USD") @map("display_currency")
+  hasWill         Boolean @default(false) @map("has_will")
+  hasPoa          Boolean @default(false) @map("has_poa")
+  hasHcProxy      Boolean @default(false) @map("has_hc_proxy")
+  user            User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("client_profiles")
+}
+
+model HouseholdProfile {
+  userId        String @id @map("user_id")
+  maritalStatus String @default("Single") @map("marital_status")
+  occupation    String @default("")
+  user          User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("household_profiles")
+}
+
+model HouseholdMember {
+  id           String @id @default(uuid())
+  userId       String @map("user_id")
+  relationship String
+  name         String
+  dob          String
+  user         User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("household_members")
+}
+
+model IncomeProfile {
+  userId   String  @id @map("user_id")
+  salary   Decimal @default(0) @db.Decimal(14, 2)
+  business Decimal @default(0) @db.Decimal(14, 2)
+  rental   Decimal @default(0) @db.Decimal(14, 2)
+  other    Decimal @default(0) @db.Decimal(14, 2)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("income_profiles")
+}
+
+model InsuranceProfile {
+  userId                    String  @id @map("user_id")
+  lifeCoverage              Decimal @default(0) @map("life_coverage") @db.Decimal(14, 2)
+  healthCoverage            Decimal @default(0) @map("health_coverage") @db.Decimal(14, 2)
+  disabilityCoverageMonthly Decimal @default(0) @map("disability_coverage_monthly") @db.Decimal(14, 2)
+  hasLongTermCare           Boolean @default(false) @map("has_long_term_care")
+  user                      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("insurance_profiles")
+}
+
+model Assumptions {
+  userId              String  @id @map("user_id")
+  inflationRate       Decimal @default(0.03) @map("inflation_rate") @db.Decimal(6, 4)
+  expectedReturn      Decimal @default(0.07) @map("expected_return") @db.Decimal(6, 4)
+  retirementInflation Decimal @default(0.04) @map("retirement_inflation") @db.Decimal(6, 4)
+  educationInflation  Decimal @default(0.06) @map("education_inflation") @db.Decimal(6, 4)
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("assumptions")
+}
+
+model Institution {
+  id       String    @id @default(uuid())
+  userId   String    @map("user_id")
+  name     String
+  type     String
+  accounts Account[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("institutions")
+}
+
+model Liability {
+  id                 String  @id @default(uuid())
+  userId             String  @map("user_id")
+  name               String
+  category           String
+  outstandingBalance Decimal @map("outstanding_balance") @db.Decimal(14, 2)
+  interestRate       Decimal @map("interest_rate") @db.Decimal(6, 4)
+  monthlyPayment     Decimal @map("monthly_payment") @db.Decimal(14, 2)
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("liabilities")
+}
+
+model WhsHistory {
+  id                    String  @id @default(uuid())
+  userId                String  @map("user_id")
+  score                 Int
+  category              String
+  netWorth              Decimal @map("net_worth") @db.Decimal(14, 2)
+  monthlySavings        Decimal @map("monthly_savings") @db.Decimal(14, 2)
+  savingsRate           Decimal @map("savings_rate") @db.Decimal(6, 4)
+  emergencyFundCoverage Decimal @map("emergency_fund_coverage") @db.Decimal(6, 4)
+  retirementReadiness   Decimal @map("retirement_readiness") @db.Decimal(6, 4)
+  goalFundingStatus     Decimal @map("goal_funding_status") @db.Decimal(6, 4)
+  insuranceAdequacy     Decimal @map("insurance_adequacy") @db.Decimal(6, 4)
+  debtRatio             Decimal @map("debt_ratio") @db.Decimal(6, 4)
+  date                  String
+  user                  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("whs_history")
+}
+
+model AdvisorClientConsent {
+  id        String @id @default(uuid())
+  advisorId String @map("advisor_id")
+  clientId  String @map("client_id")
+  advisor   User   @relation("advisor", fields: [advisorId], references: [id])
+  client    User   @relation("client", fields: [clientId], references: [id])
+
+  @@unique([advisorId, clientId])
+  @@map("advisor_client_consent")
+}
+
+model Account {
+  id            String      @id @default(uuid())
+  institutionId String      @map("institution_id")
+  userId        String      @map("user_id")
+  name          String
+  type          String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  holdings      Holding[]
+
+  @@map("accounts")
+}
+
+model Holding {
+  id           String  @id @default(uuid())
+  accountId    String  @map("account_id")
+  userId       String  @map("user_id")
+  name         String
+  category     String
+  currentValue Decimal @map("current_value") @db.Decimal(14, 2)
+  isLiquid     Boolean @default(false) @map("is_liquid")
+  account      Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("holdings")
+}
+
+model Goal {
+  id                  String                @id @default(uuid())
+  userId              String                @map("user_id")
+  name                String
+  category            String
+  priority            String                @default("Medium")
+  targetAmount        Decimal               @map("target_amount") @db.Decimal(14, 2)
+  targetYear          Int                   @map("target_year")
+  alreadySaved        Decimal               @default(0) @map("already_saved") @db.Decimal(14, 2)
+  monthlyContribution Decimal               @default(0) @map("monthly_contribution") @db.Decimal(14, 2)
+  shortfall           Decimal               @default(0) @db.Decimal(14, 2)
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+  user                User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recommendations     RecommendationAlert[]
+
+  @@map("goals")
+}
+
+model RecommendationAlert {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  category        String
+  priority        String
+  alertMessage    String   @map("alert_message")
+  reason          String
+  expectedBenefit String   @map("expected_benefit")
+  action          String
+  relatedGoalId   String?  @map("related_goal_id")
+  status          String   @default("Active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  relatedGoal     Goal?    @relation(fields: [relatedGoalId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("recommendation_alerts")
+}
+
+model ComplianceSuitabilityLog {
+  id                   String   @id @default(uuid())
+  userId               String   @map("user_id")
+  advisorId            String   @map("advisor_id")
+  actionType           String   @map("action_type")
+  suitabilityRationale String   @map("suitability_rationale")
+  ipAddress            String   @map("ip_address")
+  createdAt            DateTime @default(now()) @map("created_at")
+  advisor              User     @relation("complianceAdvisor", fields: [advisorId], references: [id], onDelete: Cascade)
+  user                 User     @relation("complianceUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("compliance_suitability_logs")
+}
+
+model DocumentNode {
+  id             String   @id @default(uuid())
+  book           String   @default("Discover The Wealth Within You")
+  part           String
+  chapter        String
+  section        String
+  pages          Int[]
+  isMetadataOnly Boolean  @map("is_metadata_only")
+  hasContent     Boolean  @map("has_content")
+  headingPrefix  String?  @map("heading_prefix")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([book])
+  @@index([part])
+  @@index([chapter])
+  @@map("document_nodes")
+}
+
+model RagChunk {
+  id                  String                     @id
+  book                String                     @default("Discover The Wealth Within You")
+  part                String?
+  chapter             String?
+  section             String?
+  pageStart           Int                        @map("page_start")
+  pageEnd             Int                        @map("page_end")
+  pages               Int[]
+  category            String
+  secondaryCategories String[]                   @map("secondary_categories")
+  keywords            String[]
+  concepts            String[]
+  entities            String[]
+  contentTypes        String[]                   @map("content_types")
+  tokenCount          Int                        @map("token_count")
+  text                String                     @db.Text
+  embeddingText       String                     @map("embedding_text") @db.Text
+  embedding           Unsupported("vector(768)")?
+  previousChunkId     String?                    @map("previous_chunk_id")
+  nextChunkId         String?                    @map("next_chunk_id")
+  hash                String?                    @map("hash")
+  createdAt           DateTime                   @default(now()) @map("created_at")
+  updatedAt           DateTime                   @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([part])
+  @@index([chapter])
+  @@map("rag_chunks")
+}
+
+model DocumentVectorChunk {
+  id               String   @id
+  book             String   @default("Discover The Wealth Within You")
+  author           String   @default("Ric Edelman")
+  part             String?
+  chapter          String?
+  section          String?
+  subsection       String?
+  pageStart        Int      @map("page_start")
+  pageEnd          Int      @map("page_end")
+  pages            Int[]
+  documentOrder    Int      @map("document_order")
+  chunkIndex       Int      @map("chunk_index")
+  previousChunkId  String?  @map("previous_chunk_id")
+  nextChunkId      String?  @map("next_chunk_id")
+  category         String
+  keywords         String[]
+  title            String
+  source           String
+  tokenCount       Int      @map("token_count")
+  contentHash      String   @map("content_hash")
+  parentDocId      String   @map("parent_doc_id")
+  isSummary        Boolean  @default(false) @map("is_summary")
+  summaryLevel     String   @default("chunk") @map("summary_level")
+  embeddingVersion String   @default("gemini-embedding-001") @map("embedding_version")
+  text             String   @db.Text
+  enrichedContext  String?  @map("enriched_context") @db.Text
+  metadata         Json?    @db.JsonB
+  embedding        Unsupported("vector(768)")?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([parentDocId])
+  @@index([documentOrder])
+  @@map("document_vector_chunks")
+}
+

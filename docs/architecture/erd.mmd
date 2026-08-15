@@ -1,0 +1,96 @@
+erDiagram
+    USERS {
+        uuid id PK
+        varchar email
+        varchar role
+        varchar kyc_status
+        timestamp created_at
+    }
+    CLIENT_PROFILES {
+        uuid id PK
+        uuid user_id FK
+        varchar risk_profile
+        decimal monthly_net_income
+        varchar job_volatility
+        boolean has_dependents
+        integer age
+    }
+    GOALS {
+        uuid id PK
+        uuid user_id FK
+        varchar name
+        decimal current_cost
+        date target_date
+        decimal earmarked_assets
+        decimal monthly_savings
+        decimal outside_sources
+        decimal future_cost
+        decimal shortfall
+        timestamp updated_at
+    }
+    ASSETS {
+        uuid id PK
+        uuid user_id FK
+        uuid account_id FK
+        varchar name
+        varchar category
+        decimal current_value
+        boolean is_liquid
+        timestamp last_updated
+    }
+    LIABILITIES {
+        uuid id PK
+        uuid user_id FK
+        varchar name
+        varchar category
+        decimal outstanding_balance
+        decimal interest_rate
+        decimal monthly_payment
+        timestamp last_updated
+    }
+    WEALTH_HEALTH_SCORE_SNAPSHOTS {
+        uuid id PK
+        uuid user_id FK
+        integer score
+        integer score_emergency_fund
+        integer score_debt_mgmt
+        integer score_savings_rate
+        integer score_portfolio_drift
+        integer score_retirement_readiness
+        integer score_insurance_protection
+        integer score_estate_planning
+        timestamp updated_at
+    }
+    WEALTH_HEALTH_SCORE_HISTORY {
+        uuid id PK
+        uuid user_id FK
+        integer score
+        date snapshot_date
+        timestamp created_at
+    }
+    RECOMMENDATION_ALERTS {
+        uuid id PK
+        uuid user_id FK
+        varchar category
+        varchar priority
+        text alert_message
+        varchar status
+        timestamp created_at
+    }
+    COMPLIANCE_SUITABILITY_LOGS {
+        uuid id PK
+        uuid user_id FK
+        uuid advisor_id
+        varchar action_type
+        text suitability_rationale
+        timestamp created_at
+    }
+
+    USERS ||--|| CLIENT_PROFILES : "has"
+    USERS ||--o{ GOALS : "owns"
+    USERS ||--o{ ASSETS : "owns"
+    USERS ||--o{ LIABILITIES : "owns"
+    USERS ||--|| WEALTH_HEALTH_SCORE_SNAPSHOTS : "scored by"
+    USERS ||--o{ WEALTH_HEALTH_SCORE_HISTORY : "logged by"
+    USERS ||--o{ RECOMMENDATION_ALERTS : "receives"
+    USERS ||--o{ COMPLIANCE_SUITABILITY_LOGS : "triggers"

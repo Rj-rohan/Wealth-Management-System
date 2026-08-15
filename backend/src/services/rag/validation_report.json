@@ -1,0 +1,14 @@
+{
+  "book": "Discover The Wealth Within You",
+  "author": "Ric Edelman",
+  "total_pages": 649,
+  "pages_processed": 649,
+  "pages_with_errors": [],
+  "toc_entries_found": 69,
+  "total_embeddable_chunks": 175,
+  "avg_tokens_per_chunk": 654.5,
+  "min_tokens": 9,
+  "max_tokens": 958,
+  "images_extracted": 151,
+  "tables_extracted": 0
+}
