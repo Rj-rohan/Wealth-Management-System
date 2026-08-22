@@ -32,8 +32,9 @@ export default function InvestmentAdvisoryWorkspace() {
   // Group by type for summary
   const byType = {};
   (data?.holdings || []).forEach((h) => {
-    const label = h.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    byType[label] = (byType[label] || 0) + h.currentValue;
+    const rawType = h.type || "other";
+    const label = rawType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    byType[label] = (byType[label] || 0) + (Number(h.currentValue ?? h.value ?? 0));
   });
   const typeData = Object.entries(byType).map(([name, value]) => ({ name, value }));
 
@@ -58,23 +59,25 @@ export default function InvestmentAdvisoryWorkspace() {
               <Tabs tabs={TYPES} active={type} onChange={setType} />
               <div className="mt-4 space-y-1">
                 {holdings.length === 0 && <p className="text-sm py-4 text-center" style={{ color: "var(--muted)" }}>No investments in this category</p>}
-                {holdings.map((h) => (
-                  <div key={h.id} className="flex items-center justify-between py-3 px-1" style={{ borderBottom: "1px solid var(--border)" }}>
+                {holdings.map((h, idx) => (
+                  <div key={h.id || `${h.name || "item"}-${idx}`} className="flex items-center justify-between py-3 px-1" style={{ borderBottom: "1px solid var(--border)" }}>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>{h.name}</p>
                         {h.ticker && <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: "var(--surface-hover)", color: "var(--muted)" }}>{h.ticker}</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge tone={RISK_TONE[h.riskLevel]}>{h.riskLevel} risk</Badge>
-                        <span className="text-xs" style={{ color: "var(--muted)" }}>{h.sector}</span>
+                        {h.riskLevel && <Badge tone={RISK_TONE[h.riskLevel] || "info"}>{h.riskLevel} risk</Badge>}
+                        {h.sector && <span className="text-xs" style={{ color: "var(--muted)" }}>{h.sector}</span>}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-4">
-                      <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{formatCurrency(h.currentValue)}</p>
-                      <p className="text-xs font-medium" style={{ color: h.returnPct >= 0 ? "var(--success)" : "var(--danger)" }}>
-                        {h.returnPct >= 0 ? "+" : ""}{h.returnPct}%
-                      </p>
+                      <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>{formatCurrency(h.currentValue ?? h.value ?? 0)}</p>
+                      {h.returnPct !== undefined && (
+                        <p className="text-xs font-medium" style={{ color: h.returnPct >= 0 ? "var(--success)" : "var(--danger)" }}>
+                          {h.returnPct >= 0 ? "+" : ""}{h.returnPct}%
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

@@ -35,14 +35,19 @@ export function computeCompletion(aggregate = {}) {
     availability = null,
   } = aggregate;
 
+  const safeQuals = Array.isArray(qualifications) ? qualifications : [];
+  const safeCerts = Array.isArray(certifications) ? certifications : [];
+  const safeLangs = Array.isArray(languages) ? languages : [];
+  const safeExpert = Array.isArray(expertise) ? expertise : [];
+
   const checks = [];
 
   PERSONAL_FIELDS.forEach((f) => checks.push(Boolean(profile?.[f])));
   PROFESSIONAL_FIELDS.forEach((f) => checks.push(Boolean(professional?.[f])));
-  checks.push(qualifications.length > 0);
-  checks.push(certifications.length > 0);
-  checks.push(languages.length > 0);
-  checks.push(expertise.length > 0);
+  checks.push(safeQuals.length > 0);
+  checks.push(safeCerts.length > 0);
+  checks.push(safeLangs.length > 0);
+  checks.push(safeExpert.length > 0);
   checks.push(Boolean(availability?.working_hours));
   checks.push(Boolean(profile?.profile_photo));
 
@@ -52,11 +57,11 @@ export function computeCompletion(aggregate = {}) {
 
 export function buildVerification(aggregate = {}, user = {}) {
   const completion = computeCompletion(aggregate);
-  const licenses = aggregate.licenses || [];
-  const licenseVerified = licenses.some((l) => l.verification_status === "verified");
+  const licenses = Array.isArray(aggregate?.licenses) ? aggregate.licenses : [];
+  const licenseVerified = licenses.some((l) => l?.verification_status === "verified");
   return {
     completion,
-    email_verified: Boolean(user.email_verified),
+    email_verified: Boolean(user?.email_verified),
     identity_verified: completion >= 70,
     license_verified: licenseVerified,
     kyc_status: completion >= 90 ? "verified" : completion >= 50 ? "in_review" : "pending",

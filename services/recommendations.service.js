@@ -1,36 +1,19 @@
-import { dataset } from "@/lib/mock/dataset";
-import { respond, clone, delay } from "./mockUtil";
+import { apiClient } from "./apiClient";
 
 export const recommendationsService = {
   async listByClient(clientId) {
-    await delay(250);
-    return clone(dataset.recommendations.filter((r) => r.clientId === clientId));
+    return apiClient.get(`/api/recommendations/client/${clientId}`);
   },
 
   async getByCategory(clientId, category) {
-    await delay(200);
-    return clone(dataset.recommendations.filter((r) => r.clientId === clientId && r.category === category));
+    return apiClient.get(`/api/recommendations/client/${clientId}?category=${category}`);
   },
 
   async markActioned(recId) {
-    await delay(180);
-    const rec = dataset.recommendations.find((r) => r.id === recId);
-    if (rec) rec.status = "actioned";
-    return rec ? clone(rec) : null;
+    return apiClient.patch(`/api/recommendations/${recId}/action`);
   },
 
   async getSummary() {
-    await delay(200);
-    const all = dataset.recommendations;
-    const byCategory = {};
-    all.forEach((r) => {
-      byCategory[r.category] = (byCategory[r.category] || 0) + 1;
-    });
-    return {
-      total: all.length,
-      pending: all.filter((r) => r.status === "pending").length,
-      actioned: all.filter((r) => r.status === "actioned").length,
-      byCategory,
-    };
+    return apiClient.get(`/api/recommendations/summary`);
   },
 };

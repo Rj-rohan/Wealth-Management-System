@@ -119,8 +119,8 @@ export default function PortfolioWorkspace() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.holdings.map((h) => (
-                      <tr key={h.id} style={{ borderBottom: "1px solid var(--border)" }}>
+                    {data.holdings.map((h, idx) => (
+                      <tr key={h.id || `${h.name || "h"}-${idx}`} style={{ borderBottom: "1px solid var(--border)" }}>
                         <td className="py-2.5 px-2">
                           <p className="font-medium" style={{ color: "var(--foreground)" }}>{h.name}</p>
                           {h.ticker && <p className="text-xs" style={{ color: "var(--muted)" }}>{h.ticker}</p>}

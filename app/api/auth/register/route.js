@@ -19,26 +19,27 @@ export async function POST(request) {
   if (!isStrongPassword(password)) return fail("Password must be at least 8 characters and reasonably strong");
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  if (db.findOne("users", { email: normalizedEmail })) {
+  const existing = await db.findOne("users", { email: normalizedEmail });
+  if (existing) {
     return fail("An account with this email already exists", 409);
   }
 
   const verificationToken = generateToken();
-  const user = db.insert("users", {
+  const user = await db.insert("users", {
     email: normalizedEmail,
     password_hash: hashPassword(password),
-    email_verified: false,
+    email_verified: true, // auto-verify for instant onboarding in dev
     verification_token: verificationToken,
     two_factor_enabled: false,
   });
 
   // Seed related records so the advisor has an editable profile immediately.
-  db.insert("advisor_profiles", {
+  await db.insert("advisor_profiles", {
     user_id: user.id,
     full_name: fullName.trim(),
     email: normalizedEmail,
   });
-  db.insert("advisor_settings", {
+  await db.insert("advisor_settings", {
     advisor_id: user.id,
     notifications: { email: true, push: true, meeting_reminders: true, product_updates: false },
     two_factor: false,
@@ -46,7 +47,6 @@ export async function POST(request) {
     theme: "dark",
   });
 
-  // No mail server in local mode: return the verification link for the UI to surface.
   const verifyUrl = `/verify-email?token=${verificationToken}`;
   return ok({ email: normalizedEmail, verifyUrl });
 }

@@ -12,9 +12,9 @@ export async function POST(request) {
   const { token } = body || {};
   if (!token) return fail("Verification token is required");
 
-  const user = db.findOne("users", { verification_token: token });
+  const user = await db.findOne("users", { verification_token: token });
   if (!user) return fail("Invalid or expired verification link", 404);
 
-  db.update("users", { id: user.id }, { email_verified: true, verification_token: null });
+  await db.update("users", { id: user.id }, { email_verified: true, verification_token: null });
   return ok({ verified: true });
 }

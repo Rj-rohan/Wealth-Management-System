@@ -16,12 +16,19 @@ export async function POST(request) {
   if (!isEmail(email)) return fail("A valid email is required");
   if (!isRequired(password)) return fail("Password is required");
 
-  const user = db.findOne("users", { email: String(email).trim().toLowerCase() });
+  const user = await db.findOne("users", { email: String(email).trim().toLowerCase() });
   if (!user || !verifyPassword(password, user.password_hash)) {
     return fail("Invalid email or password", 401);
   }
 
   await createSession(user.id);
   const { password_hash, verification_token, reset_token, ...safe } = user;
-  return ok({ user: safe });
+  const profile = await db.findOne("advisor_profiles", { user_id: user.id });
+  return ok({
+    user: {
+      ...safe,
+      full_name: profile?.full_name || "Rahul Deshmukh",
+      profile_photo: profile?.profile_photo || "",
+    },
+  });
 }

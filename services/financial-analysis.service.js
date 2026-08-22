@@ -1,79 +1,62 @@
-import { dataset } from "@/lib/mock/dataset";
-import { respond, clone, delay } from "./mockUtil";
+import { apiClient } from "./apiClient";
 
 export const financialAnalysisService = {
   async getNetWorth(clientId) {
-    await delay(280);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    const client = dataset.clients.find((c) => c.id === clientId);
-    if (!fp || !client) return null;
-    return clone({
-      totalAssets: client.assets,
-      totalLiabilities: client.liabilities,
-      netWorth: client.netWorth,
-      timeline: fp.netWorthTimeline,
-    });
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    if (!data) return null;
+    return {
+      totalAssets: data.totalAssets,
+      totalLiabilities: data.totalLiabilities,
+      netWorth: data.netWorth,
+      timeline: data.netWorthTimeline || data.timeline,
+    };
   },
 
   async getCashFlow(clientId) {
-    await delay(250);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone({
-      monthlyIncome: fp.income.total,
-      monthlyExpenses: fp.expenses.total,
-      monthlySurplus: fp.monthlySurplus,
-      savingsRate: fp.savingsRate,
-      history: fp.cashFlowHistory,
-    });
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    if (!data) return null;
+    return {
+      monthlyIncome: data.monthlyIncome,
+      monthlyExpenses: data.monthlyExpenses,
+      monthlySurplus: data.monthlySurplus,
+      savingsRate: data.savingsRate,
+      history: data.cashFlowHistory || data.history,
+    };
   },
 
   async getIncomeBreakdown(clientId) {
-    await delay(200);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone(fp.income);
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    return data?.income || null;
   },
 
   async getExpenseBreakdown(clientId) {
-    await delay(200);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone(fp.expenses);
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    return data?.expenses || null;
   },
 
   async getDebtAnalysis(clientId) {
-    await delay(220);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone(fp.debts);
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    return data?.debts || null;
   },
 
   async getEmergencyFund(clientId) {
-    await delay(180);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone(fp.emergencyFund);
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    return data?.emergencyFund || null;
   },
 
   async getFinancialHealthScore(clientId) {
-    await delay(200);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    if (!fp) return null;
-    return clone({
-      score: fp.healthScore,
-      savingsRate: fp.savingsRate,
-      debtRatio: fp.debts.debtRatio,
-      emiBurden: fp.debts.emiBurden,
-      emergencyCoverage: fp.emergencyFund.coverageMonths,
-    });
+    const data = await apiClient.get(`/api/financial-analysis/${clientId}`);
+    if (!data) return null;
+    return {
+      score: data.healthScore,
+      savingsRate: data.savingsRate,
+      debtRatio: data.debtRatio,
+      emiBurden: data.emiBurden,
+      emergencyCoverage: data.emergencyCoverage,
+    };
   },
 
   async getFullAnalysis(clientId) {
-    await delay(350);
-    const fp = dataset.financialProfiles.find((f) => f.clientId === clientId);
-    const client = dataset.clients.find((c) => c.id === clientId);
-    if (!fp || !client) return null;
-    return clone({ ...fp, totalAssets: client.assets, totalLiabilities: client.liabilities, netWorth: client.netWorth });
+    return apiClient.get(`/api/financial-analysis/${clientId}`);
   },
 };

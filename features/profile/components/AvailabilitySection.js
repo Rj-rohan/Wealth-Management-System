@@ -6,6 +6,21 @@ import { useNotifications } from "@/context/NotificationContext";
 import { profileService } from "../services/profileService";
 import { WORKING_DAYS, TIMEZONES, CONSULTATION_DURATIONS } from "@/constants/options";
 
+function formatWorkingHours(wh) {
+  if (!wh) return "—";
+  if (typeof wh === "string") return wh;
+  if (typeof wh === "object") {
+    if (wh.text) return wh.text;
+    if (wh.start && wh.end) return `${wh.start} – ${wh.end}`;
+    try {
+      return JSON.stringify(wh);
+    } catch {
+      return "—";
+    }
+  }
+  return String(wh);
+}
+
 export default function AvailabilitySection({ availability, onUpdated }) {
   const { success, error: notifyError } = useNotifications();
   const [editing, setEditing] = useState(false);
@@ -18,7 +33,7 @@ export default function AvailabilitySection({ availability, onUpdated }) {
   function startEdit() {
     setForm({
       working_days: days,
-      working_hours: data.working_hours || "",
+      working_hours: formatWorkingHours(data.working_hours) === "—" ? "" : formatWorkingHours(data.working_hours),
       timezone: data.timezone || "",
       consultation_duration: data.consultation_duration || "",
       vacation_mode: Boolean(data.vacation_mode),
@@ -155,7 +170,7 @@ export default function AvailabilitySection({ availability, onUpdated }) {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              ["Working Hours", data.working_hours || "—"],
+              ["Working Hours", formatWorkingHours(data.working_hours)],
               ["Time Zone", data.timezone || "—"],
               ["Duration", durationLabel],
               ["Vacation Mode", data.vacation_mode ? "On" : "Off"],

@@ -8,10 +8,8 @@ import { financialPlansService } from "@/services/financial-plans.service";
 import { goalsService } from "@/services/goals.service";
 import { riskService } from "@/services/risk.service";
 import { isSameDay } from "@/features/calendar/utils";
-import { dataset } from "@/lib/mock/dataset";
 
-// Aggregates the advisor's workspace snapshot from the mock services.
-// Swapping the services for Supabase later requires no changes here.
+// Aggregates the advisor's workspace snapshot from the PostgreSQL-backed services.
 export function useDashboardData() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,47 +17,51 @@ export function useDashboardData() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const [stats, upcoming, clientPage, conversations, unread, recentDocs, plansDue, goalSummary, riskAlerts] = await Promise.all([
-        clientsService.stats(),
-        appointmentsService.list({ scope: "upcoming" }),
-        clientsService.list({ sortBy: "lastContact", sortDir: "desc", pageSize: 5 }),
-        messagesService.conversations(),
-        messagesService.unreadTotal(),
-        documentsService.recent(5),
-        financialPlansService.getDueSoon(),
-        goalsService.getSummary(),
-        riskService.getAlerts(),
-      ]);
-      if (!active) return;
+      try {
+        const [stats, upcoming, clientPage, conversations, unread, recentDocs, plansDue, goalSummary, riskAlerts] =
+          await Promise.all([
+            clientsService.stats(),
+            appointmentsService.list({ scope: "upcoming" }),
+            clientsService.list({ sortBy: "lastContact", sortDir: "desc", pageSize: 6 }),
+            messagesService.conversations(),
+            messagesService.unreadTotal(),
+            documentsService.recent(5),
+            financialPlansService.getDueSoon(),
+            goalsService.getSummary(),
+            riskService.getAlerts(),
+          ]);
+        if (!active) return;
 
-      const today = new Date();
-      const todaysSchedule = upcoming.filter((a) => isSameDay(new Date(a.start), today));
+        const today = new Date();
+        const upcomingList = upcoming || [];
+        const todaysSchedule = upcomingList.filter((a) => isSameDay(new Date(a.start), today));
 
-      // Client health scores (top 5 and bottom 5)
-      const healthScores = dataset.financialProfiles
-        .map((fp) => {
-          const client = dataset.clients.find((c) => c.id === fp.clientId);
-          return client ? { id: client.id, name: client.name, score: fp.healthScore } : null;
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.score - a.score);
+        const clientItems = clientPage?.items || [];
+        const healthScores = clientItems.map((c) => ({
+          id: c.id,
+          name: c.name,
+          score: Math.min(100, Math.max(40, Math.round(((c.assets || 100000) / Math.max(1, (c.assets || 100000) + (c.liabilities || 0))) * 100))),
+        })).sort((a, b) => b.score - a.score);
 
-      setData({
-        stats,
-        unread,
-        upcoming: upcoming.slice(0, 5),
-        todaysSchedule,
-        recentClients: clientPage.items,
-        conversations: conversations.filter((c) => c.unread > 0).slice(0, 4),
-        recentDocuments: recentDocs,
-        pendingRequests: stats.prospects,
-        // Phase 3
-        plansDue,
-        goalSummary,
-        riskAlerts,
-        healthScores: healthScores.slice(0, 6),
-      });
-      setLoading(false);
+        setData({
+          stats: stats || { total: 0, active: 0, prospects: 0, totalAUM: 0 },
+          unread: unread || 0,
+          upcoming: upcomingList.slice(0, 5),
+          todaysSchedule,
+          recentClients: clientItems,
+          conversations: (conversations || []).filter((c) => c.unread > 0).slice(0, 4),
+          recentDocuments: recentDocs || [],
+          pendingRequests: stats?.prospects || 0,
+          plansDue: plansDue || [],
+          goalSummary: goalSummary || { total: 0, completed: 0, onTrack: 0, atRisk: 0, behind: 0 },
+          riskAlerts: riskAlerts || [],
+          healthScores: healthScores.slice(0, 6),
+        });
+      } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
     return () => {
       active = false;

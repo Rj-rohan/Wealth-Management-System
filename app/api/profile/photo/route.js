@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getAggregateProfile } from "@/lib/repositories/profileRepository";
 import { ok, fail, unauthorized } from "@/lib/api/response";
 
-// Local stand-in for the "advisor-profile-images" Supabase storage bucket.
 const BUCKET_DIR = path.join(process.cwd(), "public", "uploads", "advisor-profile-images");
 const ALLOWED = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -34,7 +33,7 @@ export async function POST(request) {
   fs.writeFileSync(path.join(BUCKET_DIR, filename), buffer);
 
   const publicPath = `/uploads/advisor-profile-images/${filename}`;
-  db.upsert("advisor_profiles", { user_id: user.id }, { profile_photo: publicPath });
+  await db.upsert("advisor_profiles", { user_id: user.id }, { profile_photo: publicPath });
 
-  return ok(getAggregateProfile(user));
+  return ok(await getAggregateProfile(user));
 }

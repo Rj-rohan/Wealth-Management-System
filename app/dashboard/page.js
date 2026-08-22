@@ -23,7 +23,8 @@ export default function DashboardPage() {
   const { data } = useDashboardData();
 
   const completion = profile?.verification?.completion ?? 0;
-  const name = (user?.full_name || "").split(" ")[0] || user?.email?.split("@")[0];
+  const advisorFullName = profile?.profile?.full_name || user?.full_name || "Rahul Deshmukh";
+  const name = advisorFullName.trim().split(" ")[0] || "Rahul";
 
   return (
     <AppShell title="Dashboard" subtitle="Your advisory command center" notificationCount={data?.unread ?? 0}>

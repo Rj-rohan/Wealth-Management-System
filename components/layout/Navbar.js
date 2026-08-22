@@ -18,7 +18,7 @@ export default function Navbar({ title, subtitle, user, onOpenMobile, onLogout, 
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  const name = user?.full_name || user?.email?.split("@")[0] || "Advisor";
+  const name = user?.full_name || "Rahul Deshmukh";
 
   return (
     <header

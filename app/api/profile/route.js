@@ -6,7 +6,7 @@ import { ok, fail, unauthorized } from "@/lib/api/response";
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return unauthorized();
-  return ok(getAggregateProfile(user));
+  return ok(await getAggregateProfile(user));
 }
 
 // Update personal information section.
@@ -39,6 +39,6 @@ export async function PUT(request) {
     if (key in body) patch[key] = body[key];
   }
 
-  db.upsert("advisor_profiles", { user_id: user.id }, patch);
-  return ok(getAggregateProfile(user));
+  await db.upsert("advisor_profiles", { user_id: user.id }, patch);
+  return ok(await getAggregateProfile(user));
 }

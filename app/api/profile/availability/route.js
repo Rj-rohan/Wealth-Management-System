@@ -26,6 +26,6 @@ export async function PUT(request) {
     if (key in body) patch[key] = body[key];
   }
 
-  db.upsert("advisor_availability", { advisor_id: user.id }, patch);
-  return ok(getAggregateProfile(user));
+  await db.upsert("advisor_availability", { advisor_id: user.id }, patch);
+  return ok(await getAggregateProfile(user));
 }
