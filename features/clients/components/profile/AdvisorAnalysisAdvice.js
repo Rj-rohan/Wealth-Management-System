@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import Card, { CardHeader } from "@/components/ui/Card";
 import { Badge, Button, Skeleton } from "@/components/ui";
 import { useNotifications } from "@/context/NotificationContext";
@@ -18,6 +19,7 @@ import {
   Clock,
   Shield,
   ArrowRight,
+  AlertTriangle,
 } from "lucide-react";
 
 const PRIORITY_TONE = {
@@ -55,7 +57,11 @@ export default function AdvisorAnalysisAdvice({ client }) {
           setOverallAssessment(res.advisorAnalysis.overallAssessment || "");
         }
         if (res?.advice) {
-          setGeneratedAdvice(res.advice);
+          setGeneratedAdvice({
+            summary: res.summary || res.advice.summary,
+            adviceList: Array.isArray(res.advice) ? res.advice : res.advice.adviceList || [],
+            updatedAt: res.updatedAt || res.advice.updatedAt,
+          });
         }
       })
       .catch((err) => {
@@ -70,9 +76,21 @@ export default function AdvisorAnalysisAdvice({ client }) {
     };
   }, [client?.id]);
 
+  const goals = client?.goals || [];
+  const hasGoals = goals.length > 0;
+
   async function handleGenerateAdvice() {
-    if (!financialSituationAnalysis.trim() && !goalAnalysis.trim() && !overallAssessment.trim()) {
-      error("Please enter your financial analysis and goal analysis first.");
+    const cleanSituation = financialSituationAnalysis.trim();
+    const cleanGoalAnalysis = goalAnalysis.trim();
+    const cleanOverall = overallAssessment.trim();
+
+    if (!cleanSituation && !cleanGoalAnalysis && !cleanOverall) {
+      error("Financial analysis required. Please enter your assessment notes first.");
+      return;
+    }
+
+    if (!hasGoals) {
+      error("Client has no financial goals registered. Please add at least one goal in Goal Planning before generating personalized advice.");
       return;
     }
 
@@ -80,10 +98,15 @@ export default function AdvisorAnalysisAdvice({ client }) {
     try {
       const res = await advisorAdviceService.generateAdvice({
         clientId: client.id,
-        financialSituationAnalysis,
-        goalAnalysis,
-        overallAssessment,
+        financialSituationAnalysis: cleanSituation,
+        goalAnalysis: cleanGoalAnalysis,
+        overallAssessment: cleanOverall,
       });
+
+      if (res?.status === "insufficient_data") {
+        error(res.message || "Cannot generate advice: required financial data or goals are missing.");
+        return;
+      }
 
       setGeneratedAdvice({
         summary: res.summary,
@@ -120,6 +143,16 @@ export default function AdvisorAnalysisAdvice({ client }) {
       setOverallAssessment(
         "Balance real estate illiquidity by increasing hybrid equity and debt fund allocations, while aggressively prepaying home loan principal."
       );
+    } else if (client.name.includes("Atharva")) {
+      setFinancialSituationAnalysis(
+        "Atharva has an impressive monthly surplus of ₹70,000 (47% savings rate) with net worth at ₹22.5L and zero high-interest revolving debt. His emergency liquidity reserve is fully funded for 6 months (₹4.8L)."
+      );
+      setGoalAnalysis(
+        "His primary long-term target is Financial Independence by age 40 (FIRE), alongside an intermediate goal for luxury property down-payment in 2029. Vehicle debt is manageable at 11% EMI burden."
+      );
+      setOverallAssessment(
+        "Channel 65% of the monthly surplus into systematic index and flexi-cap equity compounding, while accelerating vehicle loan prepayment over the next 18 months to achieve a zero-debt status."
+      );
     } else {
       setFinancialSituationAnalysis(
         "The client has a stable IT salary with 45% savings rate and moderate-growth risk profile (score 65). Liquid emergency fund is currently below the recommended 6-month threshold."
@@ -136,8 +169,6 @@ export default function AdvisorAnalysisAdvice({ client }) {
   if (loading) {
     return <Skeleton height={400} rounded={16} />;
   }
-
-  const goals = client?.goals || [];
 
   return (
     <div className="space-y-6">
@@ -169,7 +200,15 @@ export default function AdvisorAnalysisAdvice({ client }) {
           <CardHeader title="Client Financial Goals" subtitle={`${goals.length} Active Goals`} icon={Target} />
           <div className="space-y-2.5 max-h-[170px] overflow-y-auto pr-1">
             {goals.length === 0 ? (
-              <p className="text-sm py-4 text-center" style={{ color: "var(--muted)" }}>No goals registered</p>
+              <div className="p-4 rounded-xl text-center space-y-2" style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                <p className="text-xs font-semibold text-amber-500">No financial goals registered</p>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>At least 1 goal is required before generating personalized advice.</p>
+                <Link href="/goal-planning">
+                  <Button size="sm" variant="secondary" icon={Target} className="mt-1">
+                    Go to Goal Planning
+                  </Button>
+                </Link>
+              </div>
             ) : (
               goals.map((g) => (
                 <div
@@ -299,57 +338,58 @@ export default function AdvisorAnalysisAdvice({ client }) {
             </p>
             {generatedAdvice.updatedAt && (
               <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-                Prepared by Advisor Rahul Deshmukh • Updated {new Date(generatedAdvice.updatedAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}
+                Generated on {new Date(generatedAdvice.updatedAt).toLocaleDateString()} at {new Date(generatedAdvice.updatedAt).toLocaleTimeString()}
               </p>
             )}
           </div>
 
-          <StaggerGroup className="space-y-3">
-            {(generatedAdvice.adviceList || generatedAdvice.advice || []).map((item, idx) => (
-              <StaggerItem key={idx}>
-                <Card hover>
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div className="flex items-center gap-2.5">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold" style={{ background: "var(--surface-raised)", color: "var(--foreground)", border: "1px solid var(--border)" }}>
-                          {idx + 1}
-                        </span>
-                        <h4 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
-                          {item.title}
-                        </h4>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {item.relatedGoal && <Badge tone="neutral">{item.relatedGoal}</Badge>}
-                        <Badge tone={PRIORITY_TONE[item.priority] || "info"}>
-                          Priority: {item.priority || "Medium"}
-                        </Badge>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(generatedAdvice.adviceList || []).map((item, index) => (
+              <Card key={index} hover>
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="flex items-center justify-center w-8 h-8 rounded-lg"
+                        style={{ background: "var(--primary-dim)", color: "var(--primary)" }}
+                      >
+                        <Shield size={16} />
+                      </span>
+                      <h4 className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                        {item.title}
+                      </h4>
                     </div>
-
-                    <div className="space-y-2 text-sm pl-8">
-                      <div className="p-3 rounded-xl" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
-                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--muted-strong)" }}>
-                          Why this is important
-                        </p>
-                        <p className="leading-relaxed" style={{ color: "var(--muted-strong)" }}>
-                          {item.explanation}
-                        </p>
-                      </div>
-
-                      <div className="p-3 rounded-xl" style={{ background: "rgba(22, 217, 106, 0.05)", border: "1px solid rgba(22, 217, 106, 0.2)" }}>
-                        <p className="text-xs font-semibold uppercase tracking-wider mb-1" style={{ color: "var(--primary)" }}>
-                          Suggested direction
-                        </p>
-                        <p className="leading-relaxed font-medium" style={{ color: "var(--foreground)" }}>
-                          {item.action}
-                        </p>
-                      </div>
-                    </div>
+                    <Badge tone={PRIORITY_TONE[item.priority] || "info"}>{item.priority || "Medium"}</Badge>
                   </div>
-                </Card>
-              </StaggerItem>
+
+                  <div className="p-2.5 rounded-lg" style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--muted-strong)" }}>
+                      Why this is important
+                    </p>
+                    <p className="text-xs leading-relaxed" style={{ color: "var(--muted-strong)" }}>
+                      {item.explanation}
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg" style={{ background: "rgba(22, 217, 106, 0.05)", border: "1px solid rgba(22, 217, 106, 0.2)" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--primary)" }}>
+                      Suggested direction
+                    </p>
+                    <p className="text-xs font-medium" style={{ color: "var(--foreground)" }}>
+                      {item.action}
+                    </p>
+                  </div>
+
+                  {item.relatedGoal && (
+                    <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--muted)" }}>
+                      <Target size={12} style={{ color: "var(--primary)" }} />
+                      <span>Linked Goal: <strong>{item.relatedGoal}</strong></span>
+                    </div>
+                  )}
+                </div>
+              </Card>
             ))}
-          </StaggerGroup>
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
-import { SlidersHorizontal, Bell, ShieldCheck, EyeOff, UserCog } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { SlidersHorizontal, Bell, ShieldCheck, EyeOff, UserCog, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui";
 import { useSettings } from "../hooks/useSettings";
 import ProfilePreferences from "./ProfilePreferences";
@@ -8,9 +9,12 @@ import NotificationPreferences from "./NotificationPreferences";
 import SecuritySection from "./SecuritySection";
 import PrivacySection from "./PrivacySection";
 import AccountSection from "./AccountSection";
+import IntegrationsSection from "./IntegrationsSection";
+import { useNotifications } from "@/context/NotificationContext";
 
 const SECTIONS = [
   { id: "preferences", label: "Preferences", icon: SlidersHorizontal },
+  { id: "integrations", label: "Integrations & Calendar", icon: Calendar },
   { id: "notifications", label: "Notifications", icon: Bell },
   { id: "security", label: "Security", icon: ShieldCheck },
   { id: "privacy", label: "Privacy", icon: EyeOff },
@@ -18,8 +22,27 @@ const SECTIONS = [
 ];
 
 export default function SettingsWorkspace() {
+  const searchParams = useSearchParams();
+  const { success, error: notifyError } = useNotifications();
   const { settings, setSettings, loading } = useSettings();
   const [active, setActive] = useState("preferences");
+
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+    const googleConnected = searchParams?.get("google_connected");
+    const errorParam = searchParams?.get("error");
+    const errorMsg = searchParams?.get("msg");
+
+    if (tab && SECTIONS.some((s) => s.id === tab)) {
+      setActive(tab);
+    } else if (googleConnected === "true") {
+      setActive("integrations");
+      success("Google Calendar connected successfully!");
+    } else if (errorParam) {
+      setActive("integrations");
+      notifyError(errorMsg || "Failed to complete Google Calendar authorization");
+    }
+  }, [searchParams]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-5">
@@ -51,6 +74,7 @@ export default function SettingsWorkspace() {
         ) : (
           <>
             {active === "preferences" && <ProfilePreferences settings={settings} onUpdated={setSettings} />}
+            {active === "integrations" && <IntegrationsSection />}
             {active === "notifications" && <NotificationPreferences settings={settings} onUpdated={setSettings} />}
             {active === "security" && <SecuritySection settings={settings} onUpdated={setSettings} />}
             {active === "privacy" && <PrivacySection settings={settings} onUpdated={setSettings} />}

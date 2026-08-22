@@ -23,6 +23,7 @@ import { messagesService } from "@/services/messages.service";
 import { formatTime } from "@/utils/format";
 import TypingIndicator from "./TypingIndicator";
 import WhatsAppCallModal from "./WhatsAppCallModal";
+import ScheduleMeetingModal from "@/features/appointments/components/ScheduleMeetingModal";
 
 const EMOJIS = ["👍", "🙏", "✅", "📈", "💡", "🎯", "😊", "🚀", "💰", "🤝"];
 
@@ -39,6 +40,7 @@ export default function ChatWindow({ conversation, onUpdated }) {
   // Call modal states
   const [callModalOpen, setCallModalOpen] = useState(false);
   const [callMode, setCallMode] = useState("video");
+  const [scheduleMeetOpen, setScheduleMeetOpen] = useState(false);
 
   const scrollRef = useRef(null);
 
@@ -206,7 +208,22 @@ export default function ChatWindow({ conversation, onUpdated }) {
                         </div>
                       </div>
                     ) : (
-                      m.text
+                      <div>
+                        <p className="whitespace-pre-wrap">{m.text}</p>
+                        {(m.meetingUrl || /https:\/\/meet\.google\.com\/[a-z0-9-]+/i.test(m.text || "")) && (
+                          <div className="mt-2 pt-2 border-t border-white/20">
+                            <a
+                              href={m.meetingUrl || m.text.match(/https:\/\/meet\.google\.com\/[a-z0-9-]+/i)?.[0]}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-950 hover:bg-slate-100 transition-colors shadow-md"
+                            >
+                              <Video size={13} className="text-emerald-600" />
+                              <span>Join Google Meet</span>
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                   <div className={`flex items-center gap-1 mt-0.5 ${mine ? "justify-end" : "justify-start"}`}>
@@ -256,6 +273,14 @@ export default function ChatWindow({ conversation, onUpdated }) {
               className="absolute bottom-16 left-3 flex flex-col gap-1 p-2 rounded-xl shadow-xl z-20"
               style={{ background: "var(--surface-raised)", border: "1px solid var(--border-strong)", width: 220 }}
             >
+              <button
+                onClick={() => { setShowAttach(false); setScheduleMeetOpen(true); }}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left hover:bg-white/5 transition-colors"
+                style={{ color: "var(--primary)" }}
+              >
+                <Video size={15} style={{ color: "var(--primary)" }} />
+                <span>Schedule Google Meet</span>
+              </button>
               <button
                 onClick={() => send("📄 Shared Financial Plan Document (PDF)")}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left hover:bg-white/5 transition-colors"
@@ -361,9 +386,18 @@ export default function ChatWindow({ conversation, onUpdated }) {
       <WhatsAppCallModal
         isOpen={callModalOpen}
         mode={callMode}
+        clientId={conversation.clientId}
         clientName={conversation.clientName}
         onClose={() => setCallModalOpen(false)}
         onCallEnded={handleCallEnded}
+      />
+
+      {/* Google Meet Schedule Modal */}
+      <ScheduleMeetingModal
+        isOpen={scheduleMeetOpen}
+        initialClientId={conversation.clientId}
+        onClose={() => setScheduleMeetOpen(false)}
+        onCreated={onUpdated}
       />
     </div>
   );

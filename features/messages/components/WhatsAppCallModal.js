@@ -14,38 +14,143 @@ import {
   Minimize2,
   Sparkles,
   ShieldCheck,
-  User,
+  AlertCircle,
 } from "lucide-react";
 import { Avatar } from "@/components/ui";
+import { webrtcService } from "@/services/webrtc.service";
 
-export default function WhatsAppCallModal({ isOpen, mode = "video", clientName = "Client", onClose, onCallEnded }) {
-  const [callStatus, setCallStatus] = useState("calling"); // 'calling' | 'connected' | 'ended'
+export default function WhatsAppCallModal({
+  isOpen,
+  mode = "voice",
+  clientId,
+  clientName = "Client",
+  advisorId = "7bdc421d-4a2f-43cb-8961-61a5a1451260",
+  advisorName = "Rahul Deshmukh",
+  onClose,
+  onCallEnded,
+}) {
+  // Call States: 'calling' | 'ringing' | 'connecting' | 'connected' | 'rejected' | 'ended' | 'failed'
+  const [callStatus, setCallStatus] = useState("calling");
   const [duration, setDuration] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [audioLevel, setAudioLevel] = useState(0);
 
   const localVideoRef = useRef(null);
-  const streamRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const callIdRef = useRef(null);
 
-  // Call connection simulation
+  // Initialize and start WebRTC Call on Open
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !clientId) {
       setDuration(0);
       setCallStatus("calling");
+      setErrorMessage("");
       return;
     }
 
+    const callId = `call_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    callIdRef.current = callId;
     setCallStatus("calling");
-    const connectTimer = setTimeout(() => {
-      setCallStatus("connected");
-    }, 2200);
+    setDuration(0);
 
-    return () => clearTimeout(connectTimer);
-  }, [isOpen]);
+    // 1. Connect advisor to signaling stream
+    webrtcService.connectSignaling(advisorId);
 
-  // Duration timer when connected
+    // 2. Create call record in PostgreSQL
+    fetch("/api/calls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: callId, clientId, callType: mode, advisorId }),
+    }).catch((e) => console.log("DB call record error:", e));
+
+    // 3. Initiate WebRTC peer connection and SDP offer
+    webrtcService
+      .startCall({
+        callId,
+        advisorId,
+        advisorName,
+        clientId,
+        callType: mode,
+      })
+      .then(({ localStream }) => {
+        // Set local video if video mode
+        if (mode === "video" && localVideoRef.current && localStream) {
+          localVideoRef.current.srcObject = localStream;
+        }
+
+        // Setup audio visualizer for speaking feedback
+        setupAudioAnalyser(localStream);
+
+        // Advance from calling to ringing
+        setTimeout(() => {
+          setCallStatus((curr) => (curr === "calling" ? "ringing" : curr));
+        }, 1200);
+      })
+      .catch((err) => {
+        console.error("[WebRTC startCall failed]:", err);
+        setCallStatus("failed");
+        setErrorMessage(err.message || "Could not access microphone.");
+      });
+
+    // 4. Signaling Event Listeners
+    const unsubAccept = webrtcService.on("call-accepted", (data) => {
+      console.log("[WebRTC] Callee accepted call:", data);
+      setCallStatus("connecting");
+    });
+
+    const unsubReject = webrtcService.on("call-rejected", (data) => {
+      console.log("[WebRTC] Callee rejected call:", data);
+      setCallStatus("rejected");
+      setTimeout(() => {
+        handleEndCall();
+      }, 2000);
+    });
+
+    const unsubHangup = webrtcService.on("call-hangup", (data) => {
+      console.log("[WebRTC] Peer hung up call:", data);
+      setCallStatus("ended");
+      setTimeout(() => {
+        onCallEnded?.(mode, duration);
+        onClose();
+      }, 1000);
+    });
+
+    const unsubConn = webrtcService.on("connection-state", (state) => {
+      console.log("[WebRTC connection-state]:", state);
+      if (state === "connected") {
+        setCallStatus("connected");
+      } else if (state === "failed" || state === "disconnected") {
+        setCallStatus("failed");
+        setErrorMessage("Connection lost.");
+      }
+    });
+
+    const unsubRemoteStream = webrtcService.on("remote-stream", (stream) => {
+      console.log("[WebRTC remote-stream attached]:", stream);
+      if (mode === "video" && remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = stream;
+      }
+      setupAudioAnalyser(stream);
+    });
+
+    return () => {
+      unsubAccept();
+      unsubReject();
+      unsubHangup();
+      unsubConn();
+      unsubRemoteStream();
+      cleanupAudioAnalyser();
+    };
+  }, [isOpen, clientId, mode]);
+
+  // Duration Timer when Connected
   useEffect(() => {
     if (callStatus !== "connected") return;
     const interval = setInterval(() => {
@@ -54,35 +159,44 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
     return () => clearInterval(interval);
   }, [callStatus]);
 
-  // Local camera stream initialization for video calls
-  useEffect(() => {
-    if (!isOpen || mode !== "video") return;
+  // Audio frequency analyser for real-time sound amplitude visualizer
+  function setupAudioAnalyser(stream) {
+    if (!stream) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      audioContextRef.current = ctx;
 
-    let active = true;
-    async function startCamera() {
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          if (active && localVideoRef.current) {
-            localVideoRef.current.srcObject = stream;
-            streamRef.current = stream;
-          }
-        }
-      } catch (err) {
-        console.log("Local camera preview using animated fallback:", err.message);
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      function checkLevel() {
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const avg = sum / dataArray.length;
+        setAudioLevel(Math.min(1, avg / 80));
+        animFrameRef.current = requestAnimationFrame(checkLevel);
       }
+      checkLevel();
+    } catch (e) {
+      console.log("Audio visualizer notice:", e.message);
     }
+  }
 
-    startCamera();
-
-    return () => {
-      active = false;
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-      }
-    };
-  }, [isOpen, mode]);
+  function cleanupAudioAnalyser() {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch {}
+    }
+  }
 
   function formatDuration(sec) {
     const m = Math.floor(sec / 60);
@@ -90,16 +204,36 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
 
-  function handleEndCall() {
-    setCallStatus("ended");
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-    }
+  function handleToggleMute() {
+    const muted = webrtcService.toggleMute();
+    setIsMuted(muted);
+  }
+
+  function handleToggleVideo() {
+    const videoOff = webrtcService.toggleVideo();
+    setIsVideoOff(videoOff);
+  }
+
+  function handleToggleSpeaker() {
+    setIsSpeakerOn((prev) => {
+      const next = !prev;
+      const audioEl = webrtcService.remoteAudioElement;
+      if (audioEl) audioEl.muted = !next;
+      return next;
+    });
+  }
+
+  async function handleEndCall() {
     const finalSec = duration;
+    setCallStatus("ended");
+    cleanupAudioAnalyser();
+
+    await webrtcService.endCall(clientId, finalSec);
+
     setTimeout(() => {
       onCallEnded?.(mode, finalSec);
       onClose();
-    }, 500);
+    }, 600);
   }
 
   if (!isOpen) return null;
@@ -112,18 +246,18 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           className={`relative rounded-3xl overflow-hidden flex flex-col shadow-2xl transition-all duration-300 ${
-            isFullscreen ? "w-full h-full" : "w-full max-w-2xl h-[520px]"
+            isFullscreen ? "w-full h-full" : "w-full max-w-2xl h-[530px]"
           }`}
           style={{ background: "#0c131d", border: "1px solid var(--border-strong)" }}
         >
-          {/* Top Bar */}
+          {/* Top Info Bar */}
           <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent">
             <div className="flex items-center gap-2">
               <span className="flex items-center justify-center w-6 h-6 rounded-md" style={{ background: "var(--primary)", color: "#061009" }}>
                 <ShieldCheck size={14} />
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#fff" }}>
-                WhatsApp End-to-End Encrypted • {mode === "video" ? "Video Call" : "Voice Call"}
+              <span className="text-xs font-semibold uppercase tracking-wider text-white">
+                WebRTC Real-Time Audio • {mode === "video" ? "Video Call" : "Voice Call"}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -141,28 +275,32 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
           <div className="relative flex-1 flex flex-col items-center justify-center p-6 text-center">
             {mode === "video" ? (
               <>
-                {/* Remote Participant (Client) Video Mock Stream */}
+                {/* Remote Participant Video Stream */}
                 <div className="absolute inset-0 overflow-hidden flex items-center justify-center" style={{ background: "linear-gradient(135deg, #111a28 0%, #080f18 100%)" }}>
-                  <div className="relative flex flex-col items-center justify-center space-y-4">
-                    <div className="relative">
-                      <Avatar name={clientName} size="xl" />
-                      {callStatus === "connected" && (
-                        <span className="absolute bottom-0 right-0 w-5 h-5 rounded-full border-2 border-[#0c131d]" style={{ background: "var(--primary)" }} />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white">{clientName}</h3>
-                      <p className="text-sm font-medium mt-1" style={{ color: callStatus === "connected" ? "var(--primary)" : "var(--warning)" }}>
-                        {callStatus === "calling" ? "Ringing..." : formatDuration(duration)}
-                      </p>
-                    </div>
-                    {callStatus === "connected" && (
-                      <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs" style={{ background: "rgba(22, 217, 106, 0.15)", color: "var(--primary)", border: "1px solid rgba(22, 217, 106, 0.3)" }}>
-                        <Sparkles size={12} />
-                        <span>HD Video Connected</span>
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  {callStatus !== "connected" && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 bg-black/60 backdrop-blur-sm">
+                      <div className="relative">
+                        <Avatar name={clientName} size="xl" />
                       </div>
-                    )}
-                  </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{clientName}</h3>
+                        <p className="text-sm font-medium mt-1" style={{ color: callStatus === "rejected" ? "var(--danger)" : "var(--primary)" }}>
+                          {callStatus === "calling" && "Calling..."}
+                          {callStatus === "ringing" && "Ringing client's browser..."}
+                          {callStatus === "connecting" && "Establishing WebRTC stream..."}
+                          {callStatus === "rejected" && "Call Declined by client"}
+                          {callStatus === "ended" && "Call Ended"}
+                          {callStatus === "failed" && (errorMessage || "Connection failed")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Local Advisor Camera (Picture-in-Picture) */}
@@ -192,8 +330,12 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
               /* Voice Call Screen */
               <div className="flex flex-col items-center space-y-5">
                 <motion.div
-                  animate={callStatus === "calling" ? { scale: [1, 1.08, 1] } : {}}
-                  transition={{ repeat: Infinity, duration: 1.6 }}
+                  animate={
+                    callStatus === "connected"
+                      ? { scale: [1, 1 + audioLevel * 0.15, 1] }
+                      : { scale: [1, 1.08, 1] }
+                  }
+                  transition={{ repeat: Infinity, duration: callStatus === "connected" ? 0.4 : 1.6 }}
                   className="relative p-1 rounded-full"
                   style={{ background: "linear-gradient(135deg, var(--primary) 0%, rgba(22,217,106,0.3) 100%)" }}
                 >
@@ -202,22 +344,46 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
 
                 <div>
                   <h3 className="text-2xl font-bold text-white">{clientName}</h3>
-                  <p className="text-sm font-medium mt-1" style={{ color: callStatus === "connected" ? "var(--primary)" : "var(--warning)" }}>
-                    {callStatus === "calling" ? "Ringing..." : `Connected • ${formatDuration(duration)}`}
+                  <p
+                    className="text-sm font-semibold mt-1.5"
+                    style={{
+                      color:
+                        callStatus === "connected"
+                          ? "var(--primary)"
+                          : callStatus === "rejected" || callStatus === "failed"
+                          ? "var(--danger)"
+                          : "var(--warning)",
+                    }}
+                  >
+                    {callStatus === "calling" && "Calling..."}
+                    {callStatus === "ringing" && "Ringing client's browser..."}
+                    {callStatus === "connecting" && "Connecting WebRTC audio stream..."}
+                    {callStatus === "connected" && `Connected • ${formatDuration(duration)}`}
+                    {callStatus === "rejected" && "Call Declined by Client"}
+                    {callStatus === "ended" && `Call Ended • ${formatDuration(duration)}`}
+                    {callStatus === "failed" && (errorMessage || "Connection failed")}
                   </p>
                 </div>
 
+                {/* Real-time Dynamic Waveform visualizer */}
                 {callStatus === "connected" && (
-                  <div className="flex items-center gap-1 h-6">
-                    {[12, 24, 16, 28, 14, 22, 10, 26, 18, 20].map((h, i) => (
+                  <div className="flex items-center gap-1.5 h-8">
+                    {[14, 28, 20, 36, 18, 30, 16, 32, 22, 26, 18, 34].map((h, i) => (
                       <motion.span
                         key={i}
-                        animate={{ height: [8, h, 8] }}
-                        transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.08 }}
-                        className="w-1 rounded-full"
+                        animate={{ height: [8, Math.max(8, h * (0.3 + audioLevel * 0.9)), 8] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.05 }}
+                        className="w-1.5 rounded-full"
                         style={{ background: "var(--primary)" }}
                       />
                     ))}
+                  </div>
+                )}
+
+                {callStatus === "failed" && errorMessage && (
+                  <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 px-3 py-1.5 rounded-lg">
+                    <AlertCircle size={14} />
+                    <span>{errorMessage}</span>
                   </div>
                 )}
               </div>
@@ -228,19 +394,19 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
           <div className="p-4 flex items-center justify-center gap-4 bg-gradient-to-t from-black/90 to-transparent z-20">
             {/* Mic Toggle */}
             <button
-              onClick={() => setIsMuted((m) => !m)}
+              onClick={handleToggleMute}
               className="p-3.5 rounded-full transition-transform active:scale-95 text-white"
               style={{ background: isMuted ? "var(--danger)" : "rgba(255,255,255,0.15)" }}
-              aria-label={isMuted ? "Unmute" : "Mute"}
-              title={isMuted ? "Unmute" : "Mute"}
+              aria-label={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+              title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
             >
               {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
             </button>
 
-            {/* Video Camera Toggle (for video calls) */}
+            {/* Video Camera Toggle */}
             {mode === "video" && (
               <button
-                onClick={() => setIsVideoOff((v) => !v)}
+                onClick={handleToggleVideo}
                 className="p-3.5 rounded-full transition-transform active:scale-95 text-white"
                 style={{ background: isVideoOff ? "var(--danger)" : "rgba(255,255,255,0.15)" }}
                 aria-label={isVideoOff ? "Turn Video On" : "Turn Video Off"}
@@ -252,7 +418,7 @@ export default function WhatsAppCallModal({ isOpen, mode = "video", clientName =
 
             {/* Speaker Toggle */}
             <button
-              onClick={() => setIsSpeakerOn((s) => !s)}
+              onClick={handleToggleSpeaker}
               className="p-3.5 rounded-full transition-transform active:scale-95 text-white"
               style={{ background: isSpeakerOn ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)" }}
               aria-label={isSpeakerOn ? "Speaker Off" : "Speaker On"}

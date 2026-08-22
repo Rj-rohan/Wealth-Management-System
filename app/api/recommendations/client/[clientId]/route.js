@@ -1,69 +1,24 @@
 import { db } from "@/lib/db/database";
-import { ok } from "@/lib/api/response";
+import { ok, fail } from "@/lib/api/response";
 
 export async function GET(request, { params }) {
   const { clientId } = await params;
+  const client = await db.findOne("clients", { id: clientId });
+  if (!client) return fail("Client not found", 404);
+
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
 
+  // Fetch real database records only — NEVER generate hardcoded fake recommendations
   let recs = await db.findMany("recommendations", { client_id: clientId });
-  if (recs.length === 0) {
-    const defaults = [
-      {
-        client_id: clientId,
-        category: "investment",
-        title: "Increase equity allocation in index funds",
-        priority: "high",
-        explanation: "Current equity allocation is below recommended targets for long-term compound wealth growth.",
-        expected_benefit: "Potential 2-4% higher annual returns",
-        estimated_timeline: "1-3 months",
-        status: "pending",
-      },
-      {
-        client_id: clientId,
-        category: "tax",
-        title: "Maximize Section 80C & ELSS deductions",
-        priority: "medium",
-        explanation: "Unused tax deductions available for current financial year.",
-        expected_benefit: "Direct tax savings up to ₹46,800",
-        estimated_timeline: "Before year-end",
-        status: "pending",
-      },
-      {
-        client_id: clientId,
-        category: "emergency_fund",
-        title: "Maintain 6 months liquidity in liquid mutual fund",
-        priority: "high",
-        explanation: "Liquid buffer ensures insulation against market downturns without premature redemption.",
-        expected_benefit: "Capital safety & instant access",
-        estimated_timeline: "Immediate",
-        status: "pending",
-      },
-      {
-        client_id: clientId,
-        category: "insurance",
-        title: "Review term life and super top-up health cover",
-        priority: "medium",
-        explanation: "Ensure comprehensive family coverage aligned with current liabilities and income.",
-        expected_benefit: "Adequate protection for dependents",
-        estimated_timeline: "2-4 weeks",
-        status: "pending",
-      },
-    ];
-
-    recs = [];
-    for (const d of defaults) {
-      const inserted = await db.insert("recommendations", d);
-      recs.push(inserted);
-    }
-  }
-
-  if (category) {
+  if (category && category !== "all") {
     recs = recs.filter((r) => r.category === category);
   }
 
   const adviceRecord = await db.findOne("advisor_advice", { client_id: clientId });
   const advisorAnalysis = await db.findOne("advisor_analyses", { client_id: clientId });
+  const financialGoals = await db.findMany("client_goals", { client_id: clientId });
+  const financialInformation = (await db.findOne("financial_profiles", { client_id: clientId })) || {};
 
   const adviceList = adviceRecord?.advice
     ? typeof adviceRecord.advice === "string"
@@ -71,7 +26,31 @@ export async function GET(request, { params }) {
       : adviceRecord.advice
     : [];
 
+  const annualIncome = Number(client.income || financialInformation?.income?.total || 0);
+  const totalAssets = Number(client.assets || financialInformation?.totalAssets || financialInformation?.assets || 0);
+  const netWorth = Number(client.net_worth || client.netWorth || financialInformation?.netWorth || financialInformation?.net_worth || 0);
+  const totalLiabilities = Number(client.liabilities || financialInformation?.totalLiabilities || financialInformation?.liabilities || 0);
+  const hasFinancialData = Boolean(annualIncome > 0 || totalAssets > 0 || netWorth !== 0 || totalLiabilities > 0 || (financialInformation && Object.keys(financialInformation).length > 0 && (financialInformation.income?.total || financialInformation.assets)));
+
+  const analysisSituation = (advisorAnalysis?.financial_situation_analysis || "").trim();
+  const analysisGoal = (advisorAnalysis?.goal_analysis || "").trim();
+  const analysisOverall = (advisorAnalysis?.overall_assessment || "").trim();
+  const hasAdvisorAnalysis = Boolean(analysisSituation || analysisGoal || analysisOverall);
+
+  const hasGoals = Array.isArray(financialGoals) && financialGoals.length > 0;
+
+  const prerequisites = {
+    hasFinancialData,
+    hasGoals,
+    hasAdvisorAnalysis,
+    canGenerate: Boolean(hasFinancialData && hasGoals && hasAdvisorAnalysis),
+    hasAdvice: Boolean(adviceRecord && adviceList.length > 0),
+  };
+
   return ok({
+    clientId,
+    clientName: client.name || `${client.first_name || ""} ${client.last_name || ""}`.trim(),
+    prerequisites,
     recommendations: recs.map((r) => ({
       id: r.id,
       clientId: r.client_id || r.clientId,

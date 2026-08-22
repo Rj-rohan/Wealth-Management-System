@@ -1,17 +1,41 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { Badge, Button, Skeleton, SegmentedControl } from "@/components/ui";
 import ClientSelector from "@/components/ui/ClientSelector";
 import Card, { CardHeader } from "@/components/ui/Card";
 import { useRecommendations } from "../hooks/useRecommendations";
 import { useNotifications } from "@/context/NotificationContext";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
-import { Lightbulb, Check, TrendingUp, Shield, DollarSign, Wallet, CreditCard, ArrowLeftRight, Clock, AlertCircle } from "lucide-react";
+import {
+  Lightbulb,
+  Check,
+  TrendingUp,
+  Shield,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  ArrowLeftRight,
+  Clock,
+  AlertCircle,
+  AlertTriangle,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 
 const CAT_ICON = {
-  investment: TrendingUp, savings: Wallet, insurance: Shield, tax: DollarSign,
-  retirement: Clock, debt: CreditCard, liquidity: ArrowLeftRight, emergency_fund: AlertCircle,
+  investment: TrendingUp,
+  savings: Wallet,
+  insurance: Shield,
+  tax: DollarSign,
+  retirement: Clock,
+  debt: CreditCard,
+  liquidity: ArrowLeftRight,
+  emergency_fund: AlertCircle,
 };
+
 const CAT_LABELS = [
   { value: "all", label: "All" },
   { value: "investment", label: "Investment" },
@@ -21,15 +45,17 @@ const CAT_LABELS = [
   { value: "retirement", label: "Retirement" },
   { value: "debt", label: "Debt" },
 ];
+
 const PRIORITY_TONE = { high: "danger", medium: "warning", low: "info" };
 
 export default function RecommendationsWorkspace() {
   const [clientId, setClientId] = useState("");
   const [cat, setCat] = useState("all");
-  const { recs, advisorAdvice, advisorAnalysis, loading, markActioned } = useRecommendations(clientId);
+  const { recs, advisorAdvice, advisorAnalysis, prerequisites, loading, markActioned } = useRecommendations(clientId);
   const { success } = useNotifications();
 
   const filtered = cat === "all" ? recs : recs.filter((r) => r.category === cat);
+  const hasAdvice = Boolean(advisorAdvice?.summary || (recs && recs.length > 0));
 
   async function handleAction(recId) {
     await markActioned(recId);
@@ -43,19 +69,112 @@ export default function RecommendationsWorkspace() {
       {!clientId && (
         <div className="rounded-2xl p-12 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <Lightbulb size={40} className="mx-auto mb-3" style={{ color: "var(--muted)" }} />
-          <p className="text-sm font-medium" style={{ color: "var(--muted-strong)" }}>Select a client to view personalized advice</p>
+          <p className="text-sm font-medium" style={{ color: "var(--muted-strong)" }}>
+            Select a client to view personalized advice
+          </p>
         </div>
       )}
 
       {clientId && loading && <Skeleton height={400} rounded={16} />}
 
-      {clientId && !loading && (
+      {clientId && !loading && !hasAdvice && (
+        <div
+          className="rounded-2xl p-8 space-y-6"
+          style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+        >
+          <div className="flex items-start gap-4">
+            <div
+              className="flex items-center justify-center w-12 h-12 rounded-2xl flex-shrink-0"
+              style={{ background: "rgba(245, 158, 11, 0.12)", color: "#F59E0B" }}
+            >
+              <AlertTriangle size={24} />
+            </div>
+            <div className="space-y-1 flex-1">
+              <h3 className="text-lg font-bold text-foreground">
+                Personalized Advice Unavailable
+              </h3>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                Personalized advice is not available yet. Please complete the client&apos;s financial analysis and financial goals before generating personalized advice.
+              </p>
+            </div>
+          </div>
+
+          {/* Prerequisite Checklist */}
+          <div
+            className="p-4 rounded-xl space-y-3"
+            style={{ background: "var(--surface-raised)", border: "1px solid var(--border)" }}
+          >
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Required Client Prerequisites
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              <div className="flex items-center gap-2">
+                {prerequisites?.hasFinancialData ? (
+                  <CheckCircle2 size={16} className="text-emerald-500" />
+                ) : (
+                  <XCircle size={16} className="text-amber-500" />
+                )}
+                <span style={{ color: prerequisites?.hasFinancialData ? "var(--foreground)" : "var(--muted)" }}>
+                  Financial Information
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {prerequisites?.hasAdvisorAnalysis ? (
+                  <CheckCircle2 size={16} className="text-emerald-500" />
+                ) : (
+                  <XCircle size={16} className="text-amber-500" />
+                )}
+                <span style={{ color: prerequisites?.hasAdvisorAnalysis ? "var(--foreground)" : "var(--muted)" }}>
+                  Advisor Financial Analysis
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {prerequisites?.hasGoals ? (
+                  <CheckCircle2 size={16} className="text-emerald-500" />
+                ) : (
+                  <XCircle size={16} className="text-amber-500" />
+                )}
+                <span style={{ color: prerequisites?.hasGoals ? "var(--foreground)" : "var(--muted)" }}>
+                  Financial Goals
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Link href="/financial-analysis">
+              <Button variant="secondary" icon={TrendingUp}>
+                Complete Financial Analysis
+              </Button>
+            </Link>
+            <Link href="/goal-planning">
+              <Button variant="secondary" icon={Wallet}>
+                Go to Goal Planning
+              </Button>
+            </Link>
+            <Link href={`/clients/${clientId}?tab=advice`}>
+              <Button variant="primary" icon={Sparkles}>
+                {prerequisites?.canGenerate ? "Generate Personalized Advice" : "Complete Advisor Assessment"}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {clientId && !loading && hasAdvice && (
         <>
           {/* Executive Summary / Advisor Advice Banner */}
           {advisorAdvice?.summary && (
-            <div className="rounded-2xl p-5 space-y-2" style={{ background: "rgba(22, 217, 106, 0.06)", border: "1px solid rgba(22, 217, 106, 0.25)" }}>
+            <div
+              className="rounded-2xl p-5 space-y-2"
+              style={{ background: "rgba(22, 217, 106, 0.06)", border: "1px solid rgba(22, 217, 106, 0.25)" }}
+            >
               <div className="flex items-center gap-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-md" style={{ background: "var(--primary)", color: "#061009" }}>
+                <span
+                  className="flex items-center justify-center w-6 h-6 rounded-md"
+                  style={{ background: "var(--primary)", color: "#061009" }}
+                >
                   <Shield size={14} />
                 </span>
                 <h3 className="text-sm font-bold tracking-wide uppercase" style={{ color: "var(--primary)" }}>
@@ -66,8 +185,12 @@ export default function RecommendationsWorkspace() {
                 {advisorAdvice.summary}
               </p>
               {advisorAnalysis?.financialSituationAnalysis && (
-                <div className="mt-3 pt-3 text-xs" style={{ borderTop: "1px solid rgba(22, 217, 106, 0.15)", color: "var(--muted)" }}>
-                  <strong style={{ color: "var(--muted-strong)" }}>Advisor Assessment:</strong> {advisorAnalysis.financialSituationAnalysis}
+                <div
+                  className="mt-3 pt-3 text-xs"
+                  style={{ borderTop: "1px solid rgba(22, 217, 106, 0.15)", color: "var(--muted)" }}
+                >
+                  <strong style={{ color: "var(--muted-strong)" }}>Advisor Assessment:</strong>{" "}
+                  {advisorAnalysis.financialSituationAnalysis}
                 </div>
               )}
             </div>
@@ -77,7 +200,9 @@ export default function RecommendationsWorkspace() {
 
           {filtered.length === 0 && (
             <div className="rounded-2xl p-8 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-              <p className="text-sm" style={{ color: "var(--muted)" }}>No advice items in this category</p>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                No advice items in this category
+              </p>
             </div>
           )}
 
@@ -88,12 +213,17 @@ export default function RecommendationsWorkspace() {
                 <StaggerItem key={r.id || idx}>
                   <Card hover>
                     <div className="flex items-start gap-4">
-                      <span className="flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0" style={{ background: "var(--primary-dim)", color: "var(--primary)" }}>
+                      <span
+                        className="flex items-center justify-center w-10 h-10 rounded-xl flex-shrink-0"
+                        style={{ background: "var(--primary-dim)", color: "var(--primary)" }}
+                      >
                         <Icon size={18} />
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>{r.title}</h4>
+                          <h4 className="text-base font-semibold" style={{ color: "var(--foreground)" }}>
+                            {r.title}
+                          </h4>
                           <Badge tone={PRIORITY_TONE[r.priority] || "info"}>Priority: {r.priority}</Badge>
                           <Badge tone={r.status === "actioned" ? "success" : "neutral"}>{r.status}</Badge>
                         </div>
@@ -105,16 +235,23 @@ export default function RecommendationsWorkspace() {
                             <p style={{ color: "var(--muted-strong)" }}>{r.explanation}</p>
                           </div>
                           {r.expectedBenefit && (
-                            <div className="p-2.5 rounded-lg" style={{ background: "rgba(22, 217, 106, 0.05)", border: "1px solid rgba(22, 217, 106, 0.2)" }}>
+                            <div
+                              className="p-2.5 rounded-lg"
+                              style={{ background: "rgba(22, 217, 106, 0.05)", border: "1px solid rgba(22, 217, 106, 0.2)" }}
+                            >
                               <p className="text-xs font-semibold uppercase tracking-wider mb-0.5" style={{ color: "var(--primary)" }}>
                                 Suggested direction
                               </p>
-                              <p className="font-medium" style={{ color: "var(--foreground)" }}>{r.expectedBenefit}</p>
+                              <p className="font-medium" style={{ color: "var(--foreground)" }}>
+                                {r.expectedBenefit}
+                              </p>
                             </div>
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 mt-3 text-xs" style={{ color: "var(--muted)" }}>
-                          <span><strong style={{ color: "var(--info)" }}>Timeline:</strong> {r.estimatedTimeline}</span>
+                          <span>
+                            <strong style={{ color: "var(--info)" }}>Timeline:</strong> {r.estimatedTimeline}
+                          </span>
                         </div>
                       </div>
                       {r.status === "pending" && (

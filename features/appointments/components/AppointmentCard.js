@@ -93,6 +93,41 @@ export default function AppointmentCard({ appointment, onChanged }) {
           <p className="flex items-center gap-1.5 text-xs mt-1.5" style={{ color: "var(--muted)" }}>
             <Clock size={12} /> {formatDate(appointment.start)} · {formatTime(appointment.start)} · {appointment.duration} min · {type.label}
           </p>
+          {(() => {
+            const rawUrl = appointment.google_meet_url || appointment.googleMeetUrl;
+            const isValidMeetUrl = Boolean(
+              rawUrl &&
+              typeof rawUrl === "string" &&
+              rawUrl.startsWith("https://meet.google.com/") &&
+              rawUrl.replace("https://meet.google.com/", "").trim().length >= 3
+            );
+
+            if (isValidMeetUrl) {
+              return (
+                <div className="mt-2.5 flex items-center gap-2">
+                  <a
+                    href={rawUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors"
+                  >
+                    <Video size={13} />
+                    <span>Join Google Meet</span>
+                  </a>
+                </div>
+              );
+            }
+
+            if (appointment.type === "video" || appointment.type === "Video") {
+              return (
+                <div className="mt-2 text-xs text-amber-500/90 font-medium">
+                  Google Meet link is not available. Please recreate the meeting.
+                </div>
+              );
+            }
+
+            return null;
+          })()}
         </div>
 
         {isUpcoming && (

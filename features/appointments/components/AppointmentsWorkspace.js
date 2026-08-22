@@ -1,17 +1,17 @@
-"use client";
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
-import { CalendarClock, Plus } from "lucide-react";
-import { SegmentedControl, Button, Skeleton, EmptyState } from "@/components/ui";
+import { CalendarClock, Plus, Video, CalendarCheck } from "lucide-react";
+import { SegmentedControl, Button, Skeleton, EmptyState, Badge } from "@/components/ui";
 import { appointmentsService } from "@/services/appointments.service";
 import AppointmentCard from "./AppointmentCard";
-import ScheduleAppointmentModal from "./ScheduleAppointmentModal";
+import ScheduleMeetingModal from "./ScheduleMeetingModal";
 
 export default function AppointmentsWorkspace() {
   const [scope, setScope] = useState("upcoming");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -22,7 +22,26 @@ export default function AppointmentsWorkspace() {
 
   useEffect(() => {
     load();
+    // Check Google connection status
+    fetch("/api/google/status")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.data?.isConnected) setGoogleConnected(true);
+      })
+      .catch(() => {});
   }, [load]);
+
+  async function handleConnectGoogle() {
+    try {
+      const res = await fetch("/api/google/oauth");
+      const data = await res.json();
+      if (data?.data?.url) {
+        window.location.href = data.data.url;
+      }
+    } catch (err) {
+      console.error("Failed to get Google OAuth URL:", err);
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -35,9 +54,20 @@ export default function AppointmentsWorkspace() {
           value={scope}
           onChange={setScope}
         />
-        <Button icon={Plus} onClick={() => setScheduleOpen(true)}>
-          Schedule Appointment
-        </Button>
+        <div className="flex items-center gap-2">
+          {googleConnected ? (
+            <Badge tone="success">
+              <CalendarCheck size={13} className="mr-1 inline" /> Google Calendar Connected
+            </Badge>
+          ) : (
+            <Button size="sm" variant="secondary" onClick={handleConnectGoogle}>
+              Connect Google Calendar
+            </Button>
+          )}
+          <Button icon={Plus} onClick={() => setScheduleOpen(true)}>
+            Schedule Meeting
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -50,8 +80,8 @@ export default function AppointmentsWorkspace() {
         <EmptyState
           icon={CalendarClock}
           title={scope === "upcoming" ? "No upcoming appointments" : "No past appointments"}
-          description={scope === "upcoming" ? "Schedule a consultation to get started." : "Completed meetings will appear here."}
-          action={scope === "upcoming" ? <Button onClick={() => setScheduleOpen(true)}>Schedule Appointment</Button> : null}
+          description={scope === "upcoming" ? "Schedule a Google Meet consultation to get started." : "Completed meetings will appear here."}
+          action={scope === "upcoming" ? <Button onClick={() => setScheduleOpen(true)}>Schedule Meeting</Button> : null}
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -63,7 +93,7 @@ export default function AppointmentsWorkspace() {
         </div>
       )}
 
-      <ScheduleAppointmentModal open={scheduleOpen} onClose={() => setScheduleOpen(false)} onCreated={load} />
+      <ScheduleMeetingModal isOpen={scheduleOpen} onClose={() => setScheduleOpen(false)} onCreated={load} />
     </div>
   );
 }
