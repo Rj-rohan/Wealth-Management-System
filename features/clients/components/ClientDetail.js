@@ -14,9 +14,11 @@ import ActivityTimeline from "./profile/ActivityTimeline";
 import MeetingHistory from "./profile/MeetingHistory";
 import ClientDocuments from "./profile/ClientDocuments";
 import ClientNotes from "./profile/ClientNotes";
+import AdvisorAnalysisAdvice from "./profile/AdvisorAnalysisAdvice";
 
 const TABS = [
   { id: "overview", label: "Overview" },
+  { id: "advice", label: "Advisor Analysis & Advice" },
   { id: "financials", label: "Financials" },
   { id: "goals", label: "Goals" },
   { id: "activity", label: "Activity" },
@@ -104,6 +106,7 @@ export default function ClientDetail({ id }) {
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
 
       {tab === "overview" && <ClientOverview client={client} />}
+      {tab === "advice" && <AdvisorAnalysisAdvice client={client} />}
       {tab === "financials" && <FinancialSnapshot client={client} />}
       {tab === "goals" && <GoalsList goals={client.goals} />}
       {tab === "activity" && <ActivityTimeline client={client} />}

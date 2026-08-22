@@ -25,6 +25,7 @@ export const messagesService = {
 
   /** Simulate client reply */
   async simulateReply(id) {
-    return new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 900));
+    return apiClient.post(`/api/messages/${id}/reply`);
   },
 };

@@ -681,6 +681,161 @@ async function main() {
          VALUES (gen_random_uuid()::text, $1, $2, 'private', true, 'Client Onboarding Note', 'Demo client initialized with complete financial goals, risk profile, and asset allocation.')`,
         [c.id, c.name]
       );
+
+      // Seed Advisor Analysis
+      let finAnalysis = "";
+      let goalAnalysis = "";
+      let overallAssessment = "";
+      let summary = "";
+      let adviceItems = [];
+
+      if (c.id === "c_rahul_kulkarni") {
+        finAnalysis = "The client has a stable IT salary (₹1.2L/month) with a 45% savings rate and moderate-growth risk profile (score 65). Liquid emergency fund is currently below the recommended 6-month threshold.";
+        goalAnalysis = "Retirement (2056) is the primary long-term wealth goal. Emergency fund expansion (2027) and first house purchase (2032) are near-term milestones.";
+        overallAssessment = "Prioritize establishing a 6-month emergency buffer before scaling equity SIPs, then automate monthly index and flexi-cap investments.";
+        summary = `Hello Rahul, based on your financial position (Net Worth: ₹8.5L, Risk Profile: Moderate), your active goals, and your advisor Rahul Deshmukh's assessment: your customized wealth plan has been structured to optimize steady compound growth and capital insulation.`;
+        adviceItems = [
+          {
+            title: "Emergency Liquidity Buffer Expansion",
+            priority: "High",
+            explanation: "Your advisor highlights establishing a full 6-month emergency reserve (₹3.3L) to safeguard your family against unexpected expenses without liquidating long-term investments.",
+            action: "Allocate ₹12,000 monthly into high-yield liquid mutual funds and auto-sweep fixed deposits until target is reached.",
+            relatedGoal: "Emergency Fund",
+          },
+          {
+            title: "House Down-Payment Capital Accumulation",
+            priority: "High",
+            explanation: "Your advisor recommends ensuring adequate down-payment liquidity and debt comfort before committing to home purchase in 2032.",
+            action: "Systematically accumulate required capital in safe, medium-term hybrid funds and multi-asset allocation instruments.",
+            relatedGoal: "House Purchase",
+          },
+          {
+            title: "Long-Term Retirement Compounding Strategy",
+            priority: "Medium",
+            explanation: "Retirement requires steady long-term compounding across diversified equities to outpace inflation over your 30-year horizon.",
+            action: "Automate a dedicated monthly SIP of ₹20,000 across Nifty 50 Index and Flexi-Cap mutual funds.",
+            relatedGoal: "Retirement",
+          },
+        ];
+      } else if (c.id === "c_priya_patil") {
+        finAnalysis = "The client is a business owner with substantial real estate assets and moderate risk tolerance (score 50). The debt ratio is 40% due to home loan liabilities.";
+        goalAnalysis = "Children Education (2035) and Retirement (2045) are primary family goals. Home Loan Reduction (2030) is high priority to reduce recurring EMI burden.";
+        overallAssessment = "Balance real estate illiquidity by increasing hybrid equity and debt fund allocations, while aggressively prepaying home loan principal.";
+        summary = `Hello Priya, based on your financial position (Net Worth: ₹37L, Risk Profile: Moderate), your active goals, and your advisor Rahul Deshmukh's assessment: your customized wealth plan has been structured to improve liquidity and systematically reduce debt.`;
+        adviceItems = [
+          {
+            title: "Home Loan Principal Prepayment Acceleration",
+            priority: "High",
+            explanation: "Your advisor highlights high-interest debt reduction as a crucial step to lower monthly EMI burden and improve monthly surplus.",
+            action: "Accelerate principal prepayments by allocating ₹30,000 monthly toward the home loan to save substantial interest outlay.",
+            relatedGoal: "Home Loan Reduction",
+          },
+          {
+            title: "Children Higher Education Milestone Fund",
+            priority: "High",
+            explanation: "Your advisor recognizes education funding as an essential milestone that requires capital preservation combined with inflation-beating growth.",
+            action: "Maintain ₹20,000 monthly SIP into balanced advantage and hybrid equity funds targeting 2035.",
+            relatedGoal: "Children Education",
+          },
+          {
+            title: "Retirement Corpus & Liquidity Diversification",
+            priority: "High",
+            explanation: "Your advisor recommends balancing your property-heavy portfolio with liquid financial assets for post-retirement flexibility.",
+            action: "Deploy ₹45,000 monthly into multi-asset allocation funds, Sovereign Gold Bonds, and flexi-cap equities.",
+            relatedGoal: "Retirement",
+          },
+        ];
+      } else {
+        finAnalysis = "The client has strong cash flow with high monthly savings (₹1.5L/month) and aggressive risk tolerance (score 82). The current asset allocation has good equity participation but high liability in vehicle debt.";
+        goalAnalysis = "Early Retirement (2048) is the primary ambitious goal requiring aggressive equity compounding. Property Purchase (2030) is the intermediate goal requiring dedicated down-payment accumulation.";
+        overallAssessment = "Optimize surplus deployment into high-growth equity funds, accelerate vehicle debt reduction, and maintain structured goal-based SIPs.";
+        summary = `Hello Amit, based on your financial position (Net Worth: ₹40L, Risk Profile: Aggressive), your active goals, and your advisor Rahul Deshmukh's assessment: your customized wealth plan has been structured for high-growth compounding and strategic asset accumulation.`;
+        adviceItems = [
+          {
+            title: "Aggressive Early Retirement Portfolio Strategy",
+            priority: "High",
+            explanation: "Your advisor has prioritized retirement planning as a primary long-term objective requiring focused accumulation and portfolio growth.",
+            action: "Deploy ₹80,000 monthly into small-cap and mid-cap equity mutual funds, direct bluechip equities, and index ETFs.",
+            relatedGoal: "Early Retirement",
+          },
+          {
+            title: "Prime Property Purchase Down-Payment Fund",
+            priority: "High",
+            explanation: "Your advisor recommends building a dedicated liquid fund for the 2030 Mumbai property acquisition to minimize future mortgage leverage.",
+            action: "Direct ₹85,000 monthly into short-term corporate debt funds, arbitrage funds, and fixed deposits.",
+            relatedGoal: "Property Purchase",
+          },
+          {
+            title: "Vehicle Debt Clearance & Cash Flow Optimization",
+            priority: "Medium",
+            explanation: "Your advisor suggests clearing the ₹5L vehicle loan ahead of schedule to free up an additional ₹12,000 in monthly disposable income.",
+            action: "Utilize annual performance bonus or surplus savings to eliminate the vehicle loan within the next 12 months.",
+            relatedGoal: "Overall Wealth Strategy",
+          },
+        ];
+      }
+
+      // Upsert advisor_analyses
+      await client.query(`DELETE FROM advisor_analyses WHERE client_id = $1`, [c.id]);
+      await client.query(
+        `INSERT INTO advisor_analyses (
+          id, advisor_id, client_id, financial_situation_analysis, goal_analysis, overall_assessment, created_at, updated_at
+        ) VALUES (
+          gen_random_uuid()::text, $1, $2, $3, $4, $5, now(), now()
+        )`,
+        [primaryAdvisorId, c.id, finAnalysis, goalAnalysis, overallAssessment]
+      );
+
+      // Upsert advisor_advice
+      await client.query(`DELETE FROM advisor_advice WHERE client_id = $1`, [c.id]);
+      await client.query(
+        `INSERT INTO advisor_advice (
+          id, advisor_id, client_id, summary, advice, raw_input, created_at, updated_at
+        ) VALUES (
+          gen_random_uuid()::text, $1, $2, $3, $4::jsonb, $5::jsonb, now(), now()
+        )`,
+        [
+          primaryAdvisorId,
+          c.id,
+          summary,
+          JSON.stringify(adviceItems),
+          JSON.stringify({
+            advisorAnalysis: { finAnalysis, goalAnalysis, overallAssessment },
+            generatedAt: new Date().toISOString(),
+          }),
+        ]
+      );
+
+      // Sync into recommendations
+      await client.query(`DELETE FROM recommendations WHERE client_id = $1`, [c.id]);
+      for (const item of adviceItems) {
+        const cat = item.relatedGoal.toLowerCase().includes("retire")
+          ? "retirement"
+          : item.relatedGoal.toLowerCase().includes("emergency")
+          ? "emergency_fund"
+          : item.relatedGoal.toLowerCase().includes("tax")
+          ? "tax"
+          : item.relatedGoal.toLowerCase().includes("loan") || item.relatedGoal.toLowerCase().includes("debt")
+          ? "debt"
+          : "investment";
+
+        await client.query(
+          `INSERT INTO recommendations (
+            id, client_id, category, title, priority, explanation, expected_benefit, estimated_timeline, status, created_at, updated_at
+          ) VALUES (
+            gen_random_uuid()::text, $1, $2, $3, $4, $5, $6, $7, 'pending', now(), now()
+          )`,
+          [
+            c.id,
+            cat,
+            item.title,
+            item.priority.toLowerCase(),
+            item.explanation,
+            item.action,
+            `Aligned with ${item.relatedGoal}`,
+          ]
+        );
+      }
     }
 
     console.log("All 3 clients successfully populated with complete financial, goal, and risk data!");

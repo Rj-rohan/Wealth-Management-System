@@ -62,8 +62,17 @@ export async function GET(request, { params }) {
     recs = recs.filter((r) => r.category === category);
   }
 
-  return ok(
-    recs.map((r) => ({
+  const adviceRecord = await db.findOne("advisor_advice", { client_id: clientId });
+  const advisorAnalysis = await db.findOne("advisor_analyses", { client_id: clientId });
+
+  const adviceList = adviceRecord?.advice
+    ? typeof adviceRecord.advice === "string"
+      ? JSON.parse(adviceRecord.advice)
+      : adviceRecord.advice
+    : [];
+
+  return ok({
+    recommendations: recs.map((r) => ({
       id: r.id,
       clientId: r.client_id || r.clientId,
       category: r.category,
@@ -74,6 +83,22 @@ export async function GET(request, { params }) {
       estimatedTimeline: r.estimated_timeline || r.estimatedTimeline,
       status: r.status,
       createdAt: r.created_at || r.createdAt,
-    }))
-  );
+    })),
+    advisorAdvice: adviceRecord
+      ? {
+          id: adviceRecord.id,
+          summary: adviceRecord.summary || "",
+          advice: adviceList,
+          updatedAt: adviceRecord.updated_at,
+        }
+      : null,
+    advisorAnalysis: advisorAnalysis
+      ? {
+          financialSituationAnalysis: advisorAnalysis.financial_situation_analysis,
+          goalAnalysis: advisorAnalysis.goal_analysis,
+          overallAssessment: advisorAnalysis.overall_assessment,
+          updatedAt: advisorAnalysis.updated_at,
+        }
+      : null,
+  });
 }

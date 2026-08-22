@@ -7,7 +7,7 @@ export default function ConversationList({ conversations, activeId, onSelect, se
   return (
     <div className="flex flex-col h-full" style={{ borderRight: "1px solid var(--border)" }}>
       <div className="p-3" style={{ borderBottom: "1px solid var(--border)" }}>
-        <SearchBox value={search} onChange={onSearch} placeholder="Search conversations…" />
+        <SearchBox value={search} onChange={onSearch} placeholder="Search client name (e.g. Amit, Rahul, Priya)…" />
       </div>
       <div className="flex-1 overflow-y-auto">
         {loading ? (

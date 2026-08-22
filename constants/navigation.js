@@ -45,7 +45,7 @@ export const NAV_GROUPS = [
       { href: "/investments", label: "Investments", icon: LineChart },
       { href: "/portfolio", label: "Portfolio", icon: PieChart },
       { href: "/risk-assessment", label: "Risk Assessment", icon: Shield },
-      { href: "/recommendations", label: "Recommendations", icon: Lightbulb },
+      { href: "/recommendations", label: "Personalized Advice", icon: Lightbulb },
       { href: "/reports", label: "Reports", icon: FileBarChart },
       { href: "/scenario-planner", label: "Scenario Planner", icon: GitBranch },
     ],
