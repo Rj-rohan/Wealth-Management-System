@@ -23,3 +23,7 @@ Notes on known issues for the main branch.
 ## Overview
 
 Notes on overview for the main branch.
+
+## Folder structure
+
+Notes on folder structure for the main branch.
