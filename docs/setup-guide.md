@@ -31,3 +31,7 @@ Notes on folder structure for the combined branch.
 ## Environment variables
 
 Notes on environment variables for the combined branch.
+
+## Running locally
+
+Notes on running locally for the combined branch.
