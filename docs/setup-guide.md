@@ -35,3 +35,7 @@ Notes on environment variables for the combined branch.
 ## Running locally
 
 Notes on running locally for the combined branch.
+
+## Known issues
+
+Notes on known issues for the combined branch.
