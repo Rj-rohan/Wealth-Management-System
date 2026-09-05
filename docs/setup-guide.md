@@ -35,3 +35,7 @@ Notes on environment variables for the Personal-Wealth-Advisor branch.
 ## Running locally
 
 Notes on running locally for the Personal-Wealth-Advisor branch.
+
+## Known issues
+
+Notes on known issues for the Personal-Wealth-Advisor branch.
