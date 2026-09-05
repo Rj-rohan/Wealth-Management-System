@@ -35,3 +35,7 @@ Notes on environment variables for the wealth-management branch.
 ## Running locally
 
 Notes on running locally for the wealth-management branch.
+
+## Known issues
+
+Notes on known issues for the wealth-management branch.
