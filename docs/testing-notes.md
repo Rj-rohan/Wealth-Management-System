@@ -11,3 +11,7 @@ Notes on folder structure for the main branch.
 ## Environment variables
 
 Notes on environment variables for the main branch.
+
+## Running locally
+
+Notes on running locally for the main branch.
