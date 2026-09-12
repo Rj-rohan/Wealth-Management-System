@@ -11,3 +11,7 @@ Notes on folder structure for the wealth-management branch.
 ## Environment variables
 
 Notes on environment variables for the wealth-management branch.
+
+## Running locally
+
+Notes on running locally for the wealth-management branch.
