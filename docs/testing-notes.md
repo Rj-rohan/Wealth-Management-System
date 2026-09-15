@@ -15,3 +15,7 @@ Notes on environment variables for the main branch.
 ## Running locally
 
 Notes on running locally for the main branch.
+
+## Known issues
+
+Notes on known issues for the main branch.
